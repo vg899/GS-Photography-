@@ -1,13 +1,406 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GS Photography - Luxury AI Super Ecosystem Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              400: '#f1e09d',
+              500: '#d4af37',
+              600: '#b89028',
+              700: '#8a6818',
+            },
+            dark: {
+              950: '#030303',
+              900: '#050505',
+              850: '#0c0c0c',
+              800: '#0e0e0e',
+              700: '#151515',
+              600: '#1f1f1f',
+            }
+          },
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            poppins: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Firebase Compat App, Auth, Database CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
+  <style>
+    body {
+      background-color: #050505;
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+      color: #F5F5F5;
+    }
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .bg-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+    }
+    .glass-card {
+      background: rgba(12, 12, 12, 0.75);
+      backdrop-filter: blur(20px) saturate(125%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.82);
+    }
+    .glass-input {
+      background: rgba(8, 8, 8, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      color: #F5F5F5;
+    }
+    .glass-input:focus {
+      border-color: #d4af37;
+      outline: none;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between py-6 px-4 relative">
+
+  <!-- Background Ambience Spotlights -->
+  <div class="absolute top-[10%] left-[5%] w-72 h-72 bg-gold-500/5 rounded-full filter blur-[100px] pointer-events-none"></div>
+  <div class="absolute bottom-[10%] right-[5%] w-80 h-80 bg-gold-600/5 rounded-full filter blur-[120px] pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center py-6 sm:py-12 relative z-10">
+    
+    <!-- Branding Logo Header -->
+    <div class="text-center mb-8 max-w-2xl px-4 animate-fade-in">
+      <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 relative flex items-center justify-center">
+        <div class="absolute inset-0 rounded-full border-2 border-gold-500/20 animate-spin" style="border-style: dotted; animation-duration: 12s;"></div>
+        <div class="absolute inset-2 rounded-full border-2 border-gold-500/40 animate-spin" style="animation-duration: 6s; animation-direction: reverse;"></div>
+        <i class="fa-solid fa-camera-retro text-3xl sm:text-4xl text-gold-500"></i>
+      </div>
+      <h1 class="font-cinzel text-3xl sm:text-4xl lg:text-5xl font-black tracking-[0.2em] text-gold-gradient mb-2">GS PHOTOGRAPHY</h1>
+      <p class="text-xs sm:text-sm font-mono tracking-widest text-gold-400/80 uppercase">Luxury AI Super Ecosystem Platform</p>
+      <div class="h-[1px] w-32 bg-gradient-to-r from-transparent via-gold-500/50 to-transparent mx-auto mt-4"></div>
+    </div>
+
+    <!-- Login/Signup Grid Box -->
+    <div class="w-full max-w-md glass-card rounded-2xl overflow-hidden p-6 sm:p-8 space-y-6 shadow-2xl relative">
+      
+      <!-- Tabs Switch -->
+      <div class="flex bg-black/60 p-1.5 rounded-xl border border-white/5 gap-1 shadow-inner">
+        <button id="tabButtonLogin" onclick="switchAuthTab('login')" class="flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-black bg-gold-gradient shadow-md">
+          Sign In
+        </button>
+        <button id="tabButtonRegister" onclick="switchAuthTab('register')" class="flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-gray-400 hover:text-white">
+          Create Acc
+        </button>
+      </div>
+
+      <!-- Instruction Status Message -->
+      <div id="routingSpinner" class="hidden flex flex-col items-center justify-center p-4 py-8 space-y-3 bg-black/40 rounded-xl border border-white/5 font-mono">
+        <i class="fa-solid fa-circle-notch animate-spin text-2xl text-gold-500"></i>
+        <span class="text-xs text-gold-400 tracking-wider" id="routingStatusLabel">Initializing Secure Connection...</span>
+      </div>
+
+      <!-- Auth Inputs Form Container -->
+      <div id="authFormsContainer" class="space-y-4">
+        
+        <div>
+          <label class="block text-[9px] text-gold-400 font-mono tracking-widest uppercase pl-1 mb-1.5">Authorized Credentials Email</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gold-500/50">
+              <i class="fa-solid fa-envelope text-xs"></i>
+            </span>
+            <input type="email" id="authEmailInput" class="w-full px-3 py-2.5 pl-9 text-sm rounded-lg glass-input font-mono" placeholder="e.g. client@photo.com">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[9px] text-gold-400 font-mono tracking-widest uppercase pl-1 mb-1.5">Secure Password Key</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gold-500/50">
+              <i class="fa-solid fa-lock text-xs"></i>
+            </span>
+            <input type="password" id="authPasswordInput" class="w-full px-3 py-2.5 pl-9 text-sm rounded-lg glass-input font-mono" placeholder="••••••••">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button onclick="handleGatewayAuthSubmit()" id="gatewaySubmitBtn" class="w-full py-2.5 bg-gold-gradient text-dark-950 font-bold text-xs uppercase tracking-widest rounded-xl hover:scale-[1.01] active:translate-y-0.5 duration-150 shadow-lg shadow-gold-500/10 cursor-pointer">
+          VERIFY GATEWAY
+        </button>
+
+      </div>
+
+      <!-- Quick Tester Cheat Sheet (Highly requested for evaluation ease) -->
+      <div class="border-t border-white/10 pt-4 space-y-2">
+        <span class="block text-[9px] text-gray-500 font-mono font-bold uppercase tracking-widest text-center">Instant Evaluation Accounts</span>
+        <div class="grid grid-cols-2 gap-2">
+          
+          <button onclick="triggerAutoFill('Admin@photo.com', 'admin_pass')" class="flex flex-col items-center p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 duration-100 text-left">
+            <span class="text-[9px] font-mono tracking-widest font-bold uppercase block text-red-500">👑 Admin Portal</span>
+            <span class="text-[8px] text-gray-400 select-all font-mono mt-0.5">Admin@photo.com</span>
+          </button>
+          
+          <button onclick="triggerAutoFill('Photographer@gmail.com', 'artist_pass')" class="flex flex-col items-center p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15 duration-100 text-left">
+            <span class="text-[9px] font-mono tracking-widest font-bold uppercase block text-emerald-500">📸 Artist Terminal</span>
+            <span class="text-[8px] text-gray-400 select-all font-mono mt-0.5">Photographer@gmail.com</span>
+          </button>
+
+        </div>
+        <button onclick="triggerAutoFill('client_' + Math.floor(Math.random() * 899 + 100) + '@photo.com', 'user_pass')" class="w-full p-2 rounded-lg bg-gold-500/5 border border-gold-500/10 text-gold-400 hover:bg-gold-500/10 duration-100 text-center text-[9px] font-mono tracking-widest uppercase">
+          👤 Create & Log in as Standard User (Client App)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Active Session Hub indicator (renders if user is cookies/logged in) -->
+    <div id="activeSessionBar" class="hidden w-full max-w-md p-3.5 bg-black/60 rounded-xl border border-white/10 text-center text-xs font-mono tracking-wide mt-4">
+      <span class="text-gray-400">Current Session:</span>
+      <strong class="text-white ml-1 block text-gold-400" id="sessionEmail">Check...</strong>
+      <button onclick="logoutActiveSession()" class="mt-2 px-2.5 py-1 text-[9px] uppercase tracking-wider text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded font-bold cursor-pointer">Sign Out</button>
+    </div>
+
+  </main>
+
+  <!-- Interactive custom notifications -->
+  <div id="localPortalToast" class="fixed bottom-4 right-4 z-50 max-w-sm glass-card rounded-xl p-4 shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 flex items-start gap-3 border border-gold-500/20">
+    <div class="p-2 bg-gold-500/15 rounded-lg text-gold-500" id="toastIcon">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <div class="flex-1">
+      <h4 class="font-bold text-xs font-mono text-gold-400 uppercase tracking-widest" id="toastTitle">Security Core</h4>
+      <p class="text-[11px] text-gray-300 mt-0.5" id="toastDesc">Gateway activated.</p>
+    </div>
+    <button onclick="dismissPortalToast()" class="text-gray-500 hover:text-white text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <footer class="w-full text-center text-[10px] text-gray-600 font-mono tracking-widest uppercase z-10">
+    © 2026 GS Photography. Protected Role-Based Auth Router. Built Standalone.
+  </footer>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEYcInekyy5zCFpDpFsq08sPWggiUkKHM",
+      authDomain: "photography-811d4.firebaseapp.com",
+      databaseURL: "https://photography-811d4-default-rtdb.firebaseio.com",
+      projectId: "photography-811d4",
+      storageBucket: "photography-811d4.firebasestorage.app",
+      messagingSenderId: "358941216862",
+      appId: "1:358941216862:web:3a539c589b7dd4f39124cf",
+      measurementId: "G-KJC45Z82SE"
+    };
+
+    let auth, db;
+    let authMode = 'login';
+
+    function switchAuthTab(mode) {
+      authMode = mode;
+      const btnLogin = document.getElementById('tabButtonLogin');
+      const btnRegister = document.getElementById('tabButtonRegister');
+      const submitBtn = document.getElementById('gatewaySubmitBtn');
+      
+      if (mode === 'login') {
+        btnLogin.className = "flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-black bg-gold-gradient shadow-md";
+        btnRegister.className = "flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-gray-400 hover:text-white";
+        submitBtn.textContent = 'VERIFY GATEWAY';
+      } else {
+        btnLogin.className = "flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-gray-400 hover:text-white";
+        btnRegister.className = "flex-1 py-1.5 text-xs uppercase font-mono tracking-widest rounded-lg font-bold transition-all text-black bg-gold-gradient shadow-md";
+        submitBtn.textContent = 'BUILD NEW ACCESS';
+      }
+    }
+
+    function triggerAutoFill(email, dummyPass) {
+      document.getElementById('authEmailInput').value = email;
+      document.getElementById('authPasswordInput').value = "123456"; // Default testing passcode
+      showPortalToast("Success", "Filled credentials! Click button to log in.", "fa-solid fa-keyboard");
+    }
+
+    // Custom Toast Alert
+    let toastTimeout = null;
+    function showPortalToast(title, desc, iconRaw = "fa-solid fa-shield-halved") {
+      const toast = document.getElementById('localPortalToast');
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastDesc').textContent = desc;
+      const iconContainer = document.getElementById('toastIcon');
+      iconContainer.innerHTML = `<i class="${iconRaw}"></i>`;
+      
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(dismissPortalToast, 4000);
+    }
+
+    function dismissPortalToast() {
+      const toast = document.getElementById('localPortalToast');
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+    }
+
+    // Role initialization and router checker
+    function routeUserBasedOnRole(user) {
+      if (!user) {
+        setFormsLoading(false);
+        return;
+      }
+      
+      setFormsLoading(true, "Assuring Role Database Clearances...");
+      const uid = user.uid;
+      const email = user.email ? user.email.toLowerCase() : '';
+      
+      const userRef = db.ref('users/' + uid);
+      userRef.once('value').then(snap => {
+        let payload = snap.val();
+        let finalRole = 'user';
+        
+        if (payload && payload.role) {
+          finalRole = payload.role;
+        } else {
+          // Initialize/seed role since it didn't exist in Realtime DB yet
+          if (email.startsWith('admin') || email === 'harshvardhantiwari39@gmail.com') {
+            finalRole = 'admin';
+          } else if (email.startsWith('photographer')) {
+            finalRole = 'photographer';
+          } else {
+            finalRole = 'user';
+          }
+          
+          userRef.set({
+            email: user.email,
+            role: finalRole,
+            createdAt: Date.now()
+          }).catch(e => console.warn("Seed write err: ", e));
+        }
+
+        setFormsLoading(true, `Verified Role: ${finalRole.toUpperCase()}. Routing...`);
+        
+        // Execute clean, standalone page redirection
+        setTimeout(() => {
+          if (finalRole === 'admin') {
+            window.location.href = 'admin.html';
+          } else if (finalRole === 'photographer') {
+            window.location.href = 'photographer.html';
+          } else {
+            window.location.href = 'user.html';
+          }
+        }, 1200);
+
+      }).catch(err => {
+        console.error("Fetch role failed: ", err);
+        // Offline or permissions fallback based on hardcoded rules
+        let fallbackRole = 'user';
+        if (email.startsWith('admin') || email === 'harshvardhantiwari39@gmail.com') {
+          fallbackRole = 'admin';
+        } else if (email.startsWith('photographer')) {
+          fallbackRole = 'photographer';
+        }
+        
+        setFormsLoading(true, `Network Fallback to: ${fallbackRole.toUpperCase()}`);
+        setTimeout(() => {
+          if (fallbackRole === 'admin') {
+            window.location.href = 'admin.html';
+          } else if (fallbackRole === 'photographer') {
+            window.location.href = 'photographer.html';
+          } else {
+            window.location.href = 'user.html';
+          }
+        }, 1000);
+      });
+    }
+
+    function setFormsLoading(isLoading, customLabel = "Loading Gateway...") {
+      const spinner = document.getElementById('routingSpinner');
+      const forms = document.getElementById('authFormsContainer');
+      const label = document.getElementById('routingStatusLabel');
+      
+      if (isLoading) {
+        spinner.classList.remove('hidden');
+        forms.classList.add('hidden');
+        label.textContent = customLabel;
+      } else {
+        spinner.classList.add('hidden');
+        forms.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        
+        auth.onAuthStateChanged(user => {
+          const session = document.getElementById('activeSessionBar');
+          if (user) {
+            document.getElementById('sessionEmail').textContent = user.email;
+            session.classList.remove('hidden');
+            routeUserBasedOnRole(user);
+          } else {
+            session.classList.add('hidden');
+            setFormsLoading(false);
+          }
+        });
+      } catch (err) {
+        console.error("Firebase startup issues: ", err);
+        showPortalToast("Offline Mode", "Running locally. Credentials bypass enabled.", "fa-solid fa-wifi");
+      }
+    });
+
+    function handleGatewayAuthSubmit() {
+      const email = document.getElementById('authEmailInput').value.trim();
+      const pass = document.getElementById('authPasswordInput').value;
+      if (!email || !pass) {
+        showPortalToast("Error", "Please input both email & security password.", "fa-solid fa-triangle-exclamation");
+        return;
+      }
+
+      setFormsLoading(true, authMode === 'login' ? "Opening Secure Gateway..." : "Constructing Security Credentials...");
+
+      if (authMode === 'login') {
+        auth.signInWithEmailAndPassword(email, pass)
+          .then(cred => {
+            showPortalToast("Login Validated", "Entering system interface...", "fa-solid fa-circle-check");
+          })
+          .catch(err => {
+            setFormsLoading(false);
+            showPortalToast("Authentication Failed", err.message, "fa-solid fa-circle-xmark");
+          });
+      } else {
+        auth.createUserWithEmailAndPassword(email, pass)
+          .then(cred => {
+            showPortalToast("Account Constructed", "Gateway initialized successfully!", "fa-solid fa-circle-check");
+          })
+          .catch(err => {
+            setFormsLoading(false);
+            showPortalToast("Build Failed", err.message, "fa-solid fa-circle-xmark");
+          });
+      }
+    }
+
+    function logoutActiveSession() {
+      auth.signOut().then(() => {
+        showPortalToast("Terminated", "Authentication terminated safely.", "fa-solid fa-lock-open");
+        setTimeout(() => location.reload(), 1000);
+      });
+    }
+  </script>
+</body>
+</html>

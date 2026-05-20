@@ -121,25 +121,14 @@
   </div>
 
   <!-- ================= MAIN CONTAINER ================= -->
-  <div id="mainApp" class="max-w-md mx-auto min-h-screen flex flex-col relative bg-dark-900">
+  <div id="mainApp" class="w-full max-w-xl mx-auto min-h-screen flex flex-col relative bg-dark-900 md:border-x md:border-white/10 shadow-2xl">
     
-    <!-- TOP STATUS BAR (Android Style) -->
-    <div class="px-5 py-2 flex justify-between items-center bg-dark-950 text-xs font-mono border-b border-white/5 select-none text-gray-500">
-      <span id="androidTime">07:30</span>
-      <div class="flex items-center gap-1.5">
-        <span class="text-[9px] bg-gold-500/10 text-gold-500 border border-gold-500/30 px-1 rounded font-poppins">5G LTE</span>
-        <i class="fa-solid fa-wifi"></i>
-        <i class="fa-solid fa-battery-full text-gold-500"></i>
-        <span>100%</span>
-      </div>
-    </div>
-
     <!-- MAIN APP HEADER -->
     <header class="px-4 py-3 flex justify-between items-center glass-card border-t-0 border-x-0 sticky top-0 z-40">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-camera-retro text-2xl text-gold-500"></i>
         <div>
-          <h2 class="font-cinzel font-bold text-lg leading-none text-gold-gradient">GS PHOTO</h2>
+          <h2 class="font-cinzel font-bold text-lg leading-none text-gold-gradient">GS PHOTOGRAPHY</h2>
           <span class="text-[9px] text-gray-400 font-mono tracking-widest uppercase">AI Portal</span>
         </div>
       </div>
@@ -756,11 +745,7 @@
 
     // ================= MAIN RUNETIME LOADER =================
     window.addEventListener('load', () => {
-      // 1. Android digital realtime clock
-      updateAndroidClock();
-      setInterval(updateAndroidClock, 1000);
-
-      // 2. Clear splash
+      // 1. Clear splash
       setTimeout(() => {
         document.getElementById('splashScreen').classList.add('opacity-0', 'pointer-events-none');
       }, 1500);
@@ -776,7 +761,7 @@
         auth.onAuthStateChanged(user => {
           if (user) {
             state.currentUser = user;
-            triggerRoleCheck(user.email);
+            triggerRoleCheck(user);
             document.getElementById('activeUserBadge').classList.remove('hidden');
             document.getElementById('activeUserEmail').textContent = user.email;
             document.getElementById('authFields').classList.add('hidden');
@@ -827,22 +812,31 @@
       });
     });
 
-    function updateAndroidClock() {
-      const now = new Date();
-      let hrs = now.getHours().toString().padStart(2, '0');
-      let mins = now.getMinutes().toString().padStart(2, '0');
-      document.getElementById('androidTime').textContent = `${hrs}:${mins}`;
-    }
-
     // Role Router
-    function triggerRoleCheck(email) {
-      if (adminEmails.some(x => x.toLowerCase() === email.toLowerCase())) {
-        showToast("Authenticated Administrator", "Routing to Control Core...", "fa-solid fa-user-shield");
-        setTimeout(() => window.location.href = 'admin.html', 1000);
-      } else if (photographerEmails.some(x => x.toLowerCase() === email.toLowerCase())) {
-        showToast("Authenticated Artist", "Routing to Studio Terminal...", "fa-solid fa-camera-retro");
-        setTimeout(() => window.location.href = 'photographer.html', 1000);
-      }
+    function triggerRoleCheck(user) {
+      if (!user) return;
+      const email = user.email ? user.email.toLowerCase() : '';
+      
+      // Look up role in RTDB
+      db.ref('users/' + user.uid).once('value').then(snapshot => {
+        const userData = snapshot.val();
+        if (userData && userData.role === 'admin') {
+          showToast("Aesthetics Clearances", "Routing toward Admin Desk...", "fa-solid fa-crown");
+          setTimeout(() => { window.location.href = 'admin.html'; }, 1000);
+        } else if (userData && userData.role === 'photographer') {
+          showToast("Aesthetics Clearances", "Routing toward Photographer Terminal...", "fa-solid fa-camera-retro");
+          setTimeout(() => { window.location.href = 'photographer.html'; }, 1000);
+        }
+      }).catch(err => {
+        // Fallback checks
+        if (email.startsWith('admin') || email === 'harshvardhantiwari39@gmail.com') {
+          showToast("Admin Clearance Check", "Opening Control Center...", "fa-solid fa-crown");
+          setTimeout(() => { window.location.href = 'admin.html'; }, 1000);
+        } else if (email.startsWith('photographer')) {
+          showToast("Artist Session Check", "Opening Studio Terminal...", "fa-solid fa-camera-retro");
+          setTimeout(() => { window.location.href = 'photographer.html'; }, 1000);
+        }
+      });
     }
 
     // Auth Submission
@@ -883,7 +877,7 @@
           auth.signInWithEmailAndPassword(email, pass)
             .then(cred => {
               showToast("Identity Verified", `Welcome back: ${email}`, "fa-solid fa-circle-check");
-              triggerRoleCheck(cred.user.email);
+              triggerRoleCheck(cred.user);
               toggleAuthPanel();
             })
             .catch(err => {
@@ -893,8 +887,19 @@
           auth.createUserWithEmailAndPassword(email, pass)
             .then(cred => {
               showToast("Identity Constructed", "Account successfully built!", "fa-solid fa-id-card");
-              triggerRoleCheck(cred.user.email);
-              toggleAuthPanel();
+              
+              // Seed role inside Realtime database
+              db.ref('users/' + cred.user.uid).set({
+                email: cred.user.email,
+                role: 'user',
+                createdAt: Date.now()
+              }).then(() => {
+                triggerRoleCheck(cred.user);
+                toggleAuthPanel();
+              }).catch(e => {
+                triggerRoleCheck(cred.user);
+                toggleAuthPanel();
+              });
             })
             .catch(err => {
               showToast("Registration Failed", err.message, "fa-solid fa-circle-xmark");
@@ -906,10 +911,10 @@
     function firebaseLogout() {
       if (firebaseOffline) {
         localStorage.removeItem('gs_user');
-        location.reload();
+        window.location.href = 'index.html';
       } else {
         auth.signOut().then(() => {
-          location.reload();
+          window.location.href = 'index.html';
         });
       }
     }
