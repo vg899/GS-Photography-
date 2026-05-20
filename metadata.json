@@ -1,0 +1,6 @@
+{
+  "name": "GS Photography",
+  "description": "An ultra-premium, mobile-first AI-powered photography ecosystem platform featuring Role-Based Portals, AI Scanning, Realtime Bookings, and Dynamic QR Payments.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

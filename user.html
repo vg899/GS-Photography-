@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GS Photography - User Portal</title>
+  <!-- Tailwind CSS & FontAwesome CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Cinzel & Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              400: '#f1e09d',
+              500: '#d4af37',
+              600: '#b89028',
+              700: '#8a6818',
+            },
+            dark: {
+              900: '#050505',
+              850: '#0c0c0c',
+              800: '#0e0e0e',
+              700: '#151515',
+              600: '#1f1f1f',
+              500: '#2b2b2b',
+            }
+          },
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            poppins: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Firebase Compat App, Auth, Database CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      background-color: #050505;
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+      color: #F5F5F5;
+    }
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .bg-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+    }
+    .glass-card {
+      background: rgba(14, 14, 14, 0.75);
+      backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    .glass-input {
+      background: rgba(8, 8, 8, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      color: #F5F5F5;
+    }
+    .glass-input:focus {
+      border-color: #d4af37;
+      outline: none;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d4af37;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="text-[#F5F5F5] min-h-screen pb-20">
+
+  <!-- ================= SPLASH SCREEN ================= -->
+  <div id="splashScreen" class="fixed inset-0 z-[100] bg-dark-900 flex flex-col items-center justify-center transition-all duration-700">
+    <div class="text-center animate-pulse">
+      <div class="w-24 h-24 mx-auto mb-4 relative flex items-center justify-center">
+        <!-- Lens aperture logo simulation -->
+        <div class="absolute inset-0 rounded-full border-4 border-gold-500 animate-spin" style="border-style: double; animation-duration: 4s;"></div>
+        <i class="fa-solid fa-camera text-4xl text-gold-500"></i>
+      </div>
+      <h1 class="font-cinzel text-3xl font-bold tracking-widest text-gold-gradient mb-1">GS PHOTOGRAPHY</h1>
+      <p class="text-xs text-gold-400 tracking-wider font-poppins opacity-70">AI SUPER PLATFORM</p>
+    </div>
+  </div>
+
+  <!-- ================= INTERNAL NOTIFICATION POPUP ================= -->
+  <div id="toastAlert" class="fixed top-12 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-sm glass-card rounded-xl p-4 shadow-2xl transition-all duration-500 opacity-0 pointer-events-none transform -translate-y-4">
+    <div class="flex items-start gap-3">
+      <div class="p-2 bg-gold-500/15 rounded-lg text-gold-500">
+        <i class="fa-solid fa-bell" id="toastIcon"></i>
+      </div>
+      <div class="flex-1">
+        <h4 class="font-semibold text-sm text-gold-400" id="toastTitle">Notification</h4>
+        <p class="text-xs text-gray-300 mt-1" id="toastDesc">Something updated in your database.</p>
+      </div>
+      <button onclick="hideToast()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <div id="mainApp" class="max-w-md mx-auto min-h-screen flex flex-col relative bg-dark-900">
+    
+    <!-- TOP STATUS BAR (Android Style) -->
+    <div class="px-5 py-2 flex justify-between items-center bg-dark-950 text-xs font-mono border-b border-white/5 select-none text-gray-500">
+      <span id="androidTime">07:30</span>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[9px] bg-gold-500/10 text-gold-500 border border-gold-500/30 px-1 rounded font-poppins">5G LTE</span>
+        <i class="fa-solid fa-wifi"></i>
+        <i class="fa-solid fa-battery-full text-gold-500"></i>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <!-- MAIN APP HEADER -->
+    <header class="px-4 py-3 flex justify-between items-center glass-card border-t-0 border-x-0 sticky top-0 z-40">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-camera-retro text-2xl text-gold-500"></i>
+        <div>
+          <h2 class="font-cinzel font-bold text-lg leading-none text-gold-gradient">GS PHOTO</h2>
+          <span class="text-[9px] text-gray-400 font-mono tracking-widest uppercase">AI Portal</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Notification button -->
+        <button onclick="toggleNotificationCenter()" class="relative p-2 rounded-full hover:bg-white/5 text-gray-400 hover:text-gold-500 transition-colors">
+          <i class="fa-solid fa-bell"></i>
+          <span id="notificationBadge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+        </button>
+        <!-- User account button -->
+        <button onclick="toggleAuthPanel()" class="w-8 h-8 rounded-full border border-gold-500/30 overflow-hidden bg-dark-700 flex items-center justify-center">
+          <img id="userAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" alt="Avatar" class="w-full h-full object-cover hidden">
+          <i id="userIconPlaceholder" class="fa-solid fa-user text-sm text-gold-400"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= AUTH PANEL ================= -->
+    <div id="authPanel" class="fixed inset-0 z-50 bg-dark-900/95 flex flex-col justify-center items-center p-6 transition-all duration-300">
+      <div class="w-full max-w-sm glass-card rounded-2xl p-6 relative">
+        <button onclick="toggleAuthPanel()" class="absolute top-4 right-4 text-gray-500 hover:text-gold-500">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <div class="text-center mb-6">
+          <h3 class="font-cinzel text-2xl font-bold text-gold-gradient">MEMBER ACCESS</h3>
+          <p class="text-xs text-gray-400">Access your albums, matching photos & bookings</p>
+        </div>
+
+        <!-- Role Badge Display -->
+        <div id="activeUserBadge" class="hidden text-center mb-4 p-2 bg-gold-500/10 border border-gold-500/30 rounded-lg">
+          <span class="text-xs font-semibold text-gold-400">Logged in: <span id="activeUserEmail">guest@gmail.com</span></span>
+          <br>
+          <button onclick="firebaseLogout()" class="mt-2 text-xs text-red-400 underline hover:text-red-300">Sign Out</button>
+        </div>
+
+        <div id="authFields">
+          <!-- Segment Control -->
+          <div class="flex bg-dark-900 duration-100 rounded-lg p-1 border border-white/5 mb-4">
+            <button onclick="setAuthMode('login')" id="tabLogin" class="flex-1 py-1.5 text-xs rounded font-medium bg-gold-500 text-dark-900">Sign In</button>
+            <button onclick="setAuthMode('register')" id="tabRegister" class="flex-1 py-1.5 text-xs rounded font-medium text-gray-400 hover:text-white">Sign Up</button>
+          </div>
+
+          <div class="space-y-3 mb-4">
+            <div>
+              <label class="block text-[10px] text-gold-400 uppercase tracking-widest pl-1 mb-1">Email</label>
+              <input type="email" id="authEmail" class="w-full px-3 py-2 text-sm rounded-lg glass-input" placeholder="you@photo.com">
+            </div>
+            <div>
+              <label class="block text-[10px] text-gold-400 uppercase tracking-widest pl-1 mb-1">Password</label>
+              <input type="password" id="authPassword" class="w-full px-3 py-2 text-sm rounded-lg glass-input" placeholder="••••••••">
+            </div>
+          </div>
+
+          <button onclick="handleAuthSubmit()" id="authSubmitBtn" class="w-full py-2.5 rounded-lg bg-gold-gradient text-dark-900 font-semibold text-sm shadow-lg shadow-gold-500/15 duration-200 hover:opacity-90">
+            CONTINUE
+          </button>
+          
+          <div class="mt-4 text-center">
+            <p class="text-[10px] text-gray-500">
+              Role routing enabled. Admins or photographers will be redirected instantly to their terminals.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB CONTENT SCROLLABLE ================= -->
+    <main class="flex-1 p-4" id="mainContentScroll">
+
+      <!-- ================= SCREEN 1: HOME ================= -->
+      <section id="screenHome" class="space-y-6">
+        
+        <!-- Welcome banner with live ticker -->
+        <div class="relative rounded-2xl overflow-hidden shadow-2xl border border-gold-500/10">
+          <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80" alt="Wedding Banner" class="w-full h-44 object-cover object-center filter brightness-90">
+          <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent"></div>
+          <div class="absolute bottom-4 left-4 right-4">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+              <span class="text-[10px] text-red-500 font-semibold tracking-wider">LIVE EVENT STREAMING</span>
+            </div>
+            <h3 class="font-cinzel text-xl font-bold text-white tracking-wide">Elite Royal Weddings</h3>
+            <p class="text-xs text-gold-400 font-light flex items-center gap-1">
+              <i class="fa-solid fa-map-pin"></i> Rajasthan Mahal &bull; May 2026
+            </p>
+          </div>
+        </div>
+
+        <!-- Featured / Stories viewer -->
+        <div>
+          <h3 class="font-cinzel text-sm font-bold tracking-widest text-gold-400 uppercase mb-3">Live Moments</h3>
+          <div class="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none" id="storiesList">
+            <!-- Dynamically populated events as dynamic swipe items -->
+            <div class="py-2 text-[10px] text-gray-500 italic">Scanning event directories...</div>
+          </div>
+        </div>
+
+        <!-- Featured wedding slider view / dynamic banner -->
+        <div class="glass-card rounded-2xl p-4">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="font-cinzel text-xs font-bold tracking-wider text-gold-400 uppercase">Premium Album Highlights</h4>
+            <span class="text-[10px] tracking-wider text-gray-400">1 of 3</span>
+          </div>
+          <!-- Manual slide simulation -->
+          <div class="relative h-44 rounded-xl overflow-hidden cursor-pointer" onclick="openGalleryFilter('Wedding')">
+            <img id="bannerSlide" src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover filter transition-all duration-500 hover:scale-105">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent"></div>
+            <div class="absolute bottom-3 left-3">
+              <span class="text-[10px] bg-gold-500 text-dark-900 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">Royal Elegance</span>
+              <p class="text-xs text-white mt-1">Stout & Catherine Wedding Portfolio</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Realtime indicators: Active photographers -->
+        <div>
+          <h3 class="font-cinzel text-sm font-bold tracking-widest text-gold-400 uppercase mb-3">On-Duty Custom Photographers</h3>
+          <div class="space-y-3" id="photographersList">
+            <!-- Simulated database list -->
+            <div class="flex items-center justify-between p-3 glass-card rounded-xl">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-full object-cover border border-gold-500/20">
+                <div>
+                  <h4 class="text-xs font-semibold text-white">Alexander Gold</h4>
+                  <p class="text-[10px] text-gray-400"><i class="fa-solid fa-star text-gold-500 mr-1"></i>4.9 | Wedding Specialist</p>
+                </div>
+              </div>
+              <span class="text-[9px] bg-green-500/10 text-green-400 border border-green-500/30 px-1.5 py-0.5 rounded-full"><i class="fa-solid fa-circle text-[6px] mr-1"></i>Active</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= SCREEN 2: GALLERY ================= -->
+      <section id="screenGallery" class="space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <h3 class="font-cinzel text-lg font-bold text-gold-gradient">SMART GALLERY</h3>
+          <span class="text-[9px] font-mono text-gold-400 bg-gold-500/10 border border-gold-500/20 px-2 py-0.5 rounded-full">Watermarked</span>
+        </div>
+
+        <!-- Dynamic Slide Segment Filter -->
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none" id="galleryCategoryFilter">
+          <button onclick="setGalleryFilter('All')" class="category-btn flex-shrink-0 px-3 py-1 bg-gold-500 text-dark-900 text-xs font-semibold rounded-full duration-150">All</button>
+          <button onclick="setGalleryFilter('Wedding')" class="category-btn flex-shrink-0 px-3 py-1 bg-dark-800 text-gray-400 text-xs font-semibold rounded-full border border-white/5 hover:border-gold-500/40">Weddings</button>
+          <button onclick="setGalleryFilter('Birthday')" class="category-btn flex-shrink-0 px-3 py-1 bg-dark-800 text-gray-400 text-xs font-semibold rounded-full border border-white/5 hover:border-gold-500/40">Birthdays</button>
+          <button onclick="setGalleryFilter('Corporate')" class="category-btn flex-shrink-0 px-3 py-1 bg-dark-800 text-gray-400 text-xs font-semibold rounded-full border border-white/5 hover:border-gold-500/40">Corporate</button>
+          <button onclick="setGalleryFilter('Sports')" class="category-btn flex-shrink-0 px-3 py-1 bg-dark-800 text-gray-400 text-xs font-semibold rounded-full border border-white/5 hover:border-gold-500/40">Sports</button>
+        </div>
+
+        <!-- Masonry Grid with Image Cards -->
+        <div class="grid grid-cols-2 gap-3" id="masonryGrid">
+          <!-- Populated from Javascript -->
+        </div>
+      </section>
+
+      <!-- ================= SCREEN 3: AI SCAN & TOOLS ================= -->
+      <section id="screenAITools" class="space-y-6 hidden">
+        
+        <!-- Tab inner picker for Scanner and Editor -->
+        <div class="flex bg-dark-950 p-1 rounded-xl border border-white/5">
+          <button onclick="setAIToolTab('scanner')" id="btnTabScanner" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-gold-500 text-dark-900 transition-all duration-200">
+            <i class="fa-solid fa-face-viewfinder mr-1.5"></i>AI Face Scan
+          </button>
+          <button onclick="setAIToolTab('editor')" id="btnTabEditor" class="flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all duration-200">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>AI Darkroom
+          </button>
+        </div>
+
+        <!-- SUB TAB 1: AI FACE SCANNER -->
+        <div id="aiScannerModule" class="space-y-6">
+          <div class="glass-card rounded-2xl p-4 text-center space-y-4">
+            <div class="mx-auto w-16 h-16 rounded-full bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500 text-2xl animate-pulse">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-cinzel text-sm font-bold tracking-wider text-gold-400">Personalized Memories Scan</h4>
+              <p class="text-xs text-gray-400 px-4">Upload a selfie and our AI engine matches tags to pull out every custom wedding or event photo containing you database-wide!</p>
+            </div>
+
+            <!-- Upload selfie box -->
+            <div class="border-2 border-dashed border-gold-500/30 rounded-xl p-6 bg-dark-900/60 relative flex flex-col items-center justify-center cursor-pointer hover:border-gold-500/60 duration-150" onclick="triggerSelfieUpload()">
+              <input type="file" id="selfieFileInput" accept="image/*" class="hidden" onchange="handleSelfieSelection(event)">
+              <div id="scannerIconHUD" class="text-center space-y-2">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-500 select-none"></i>
+                <span class="block text-xs text-gray-400 font-medium">Select selfie to start scan</span>
+              </div>
+              <div id="scannerPreviewBox" class="hidden w-28 h-28 rounded-lg overflow-hidden relative border border-gold-500/40">
+                <img id="selfiePreviewImage" class="w-full h-full object-cover">
+                <!-- Golden laser beam scanner graphic overlay -->
+                <div id="laserBeam" class="absolute left-0 right-0 h-1 bg-gold-500 animate-[bounce_2s_infinite] shadow-[0_0_12px_#d4af37]"></div>
+              </div>
+            </div>
+
+            <button onclick="startAIScan()" id="startScanBtn" class="w-full py-2.5 bg-dark-800 text-gold-500 font-semibold border border-gold-500/30 rounded-lg text-xs tracking-wider flex items-center justify-center gap-2 hover:bg-gold-500 hover:text-dark-900 transition-colors disabled:opacity-40 disabled:pointer-events-none" disabled>
+              <i class="fa-solid fa-arrows-spin animate-spin hidden" id="scanSpinner"></i>
+              <span id="scanBtnText">SELECT SELFIE FIRST</span>
+            </button>
+          </div>
+
+          <!-- Matched Gallery Container -->
+          <div id="aiMatchedGroup" class="hidden space-y-3">
+            <div class="p-3 bg-gold-500/10 border border-gold-500/20 rounded-xl flex items-center justify-between">
+              <div>
+                <h5 class="text-xs font-bold text-gold-400 font-cinzel tracking-wider"><i class="fa-regular fa-face-smile mr-1"></i> AI Match Analysis</h5>
+                <!-- Micro metrics tags -->
+                <div class="flex gap-2 mt-1">
+                  <span class="text-[8px] bg-gold-500/20 text-gold-300 border border-gold-500/30 px-1 py-0.5 rounded" id="smileTag">Smile Match: 94%</span>
+                  <span class="text-[8px] bg-gold-500/20 text-gold-300 border border-gold-500/30 px-1 py-0.5 rounded" id="emotionTag">Emotion: Joy</span>
+                </div>
+              </div>
+              <span class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 border border-green-500/30 rounded-full font-mono font-bold" id="matchCountTag">3 Photos Found</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3" id="aiMatchedPhotosList">
+              <!-- Matched pictures load from script -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB TAB 2: AI DARKROOM EDITOR -->
+        <div id="aiEditorModule" class="space-y-4 hidden">
+          <div class="glass-card rounded-2xl p-4 space-y-4">
+            <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider">AI Color & Light Refinement</h4>
+            
+            <!-- Canvas container -->
+            <div class="relative rounded-xl overflow-hidden bg-dark-950 flex items-center justify-center border border-white/5" style="height: 220px;">
+              <!-- Upload placeholder if no custom image is selected -->
+              <div id="editorPlaceholder" class="text-center space-y-2 cursor-pointer" onclick="triggerEditorUpload()">
+                <i class="fa-solid fa-wand-magic-sparkles text-3xl text-gold-500"></i>
+                <p class="text-[10px] text-gray-500">Tap to load a photograph for AI editing</p>
+              </div>
+              <input type="file" id="editorFileInput" accept="image/*" class="hidden" onchange="handleEditorSelection(event)">
+              
+              <!-- Editing viewport -->
+              <div class="relative w-full h-full hidden" id="editorImageParent">
+                <canvas id="editingCanvas" class="w-full h-full object-contain"></canvas>
+                <!-- Filter Badge indicator -->
+                <span id="currentFilterText" class="absolute top-2 left-2 text-[9px] bg-black/60 text-gold-500 px-1.5 py-0.5 rounded font-mono uppercase">Original</span>
+              </div>
+            </div>
+
+            <!-- Dynamic sliders mimicking high-end apps -->
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-[10px] text-gray-400 font-mono">
+                  <span>AI COLOR TEMPERATURE</span>
+                  <span id="valTemp">0%</span>
+                </div>
+                <input type="range" id="slideTemp" min="-50" max="50" value="0" oninput="updateAIEditor()" class="w-full accent-gold-500 h-1 bg-dark-900 rounded-lg appearance-none cursor-pointer">
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] text-gray-400 font-mono">
+                  <span>DSLR AMBIENT BLUR</span>
+                  <span id="valBlur">0px</span>
+                </div>
+                <input type="range" id="slideBlur" min="0" max="15" value="0" oninput="updateAIEditor()" class="w-full accent-gold-500 h-1 bg-dark-900 rounded-lg appearance-none cursor-pointer">
+              </div>
+              <div>
+                <div class="flex justify-between text-[10px] text-gray-400 font-mono">
+                  <span>EXPOSURE & CONTRAST</span>
+                  <span id="valExposure">0%</span>
+                </div>
+                <input type="range" id="slideExposure" min="-50" max="50" value="0" oninput="updateAIEditor()" class="w-full accent-gold-500 h-1 bg-dark-900 rounded-lg appearance-none cursor-pointer">
+              </div>
+            </div>
+
+            <!-- Dynamic Instagram/VSCO Style Preset filter grid -->
+            <div class="grid grid-cols-4 gap-2">
+              <button onclick="applyPreset('GoldenHour')" class="p-2 bg-dark-900 hover:border-gold-500/40 border border-white/5 rounded-lg text-center font-mono">
+                <span class="block text-[8px] text-gold-500">SUNSET</span>
+                <span class="text-[7px] text-gray-500">Warmer</span>
+              </button>
+              <button onclick="applyPreset('RoyalCinematic')" class="p-2 bg-dark-900 hover:border-gold-500/40 border border-white/5 rounded-lg text-center font-mono">
+                <span class="block text-[8px] text-gold-500">ROYAL</span>
+                <span class="text-[7px] text-gray-500">High Contrast</span>
+              </button>
+              <button onclick="applyPreset('VintageNoir')" class="p-2 bg-dark-900 hover:border-gold-500/40 border border-white/5 rounded-lg text-center font-mono">
+                <span class="block text-[8px] text-gold-500">NOIR</span>
+                <span class="text-[7px] text-gray-500">B&W Film</span>
+              </button>
+              <button onclick="applyPreset('NeonGlow')" class="p-2 bg-dark-900 hover:border-gold-500/40 border border-white/5 rounded-lg text-center font-mono">
+                <span class="block text-[8px] text-gold-500">NEON</span>
+                <span class="text-[7px] text-gray-500">Cyber Accent</span>
+              </button>
+            </div>
+
+            <!-- Download high-scale final button -->
+            <button onclick="downloadEditedImage()" id="btnDownloadEdit" class="w-full py-2 bg-gold-gradient text-dark-900 text-xs font-bold tracking-widest rounded-lg flex items-center justify-center gap-1.5 duration-200 hover:opacity-90 disabled:opacity-30 disabled:pointer-events-none" disabled>
+              <i class="fa-solid fa-circle-down"></i>DOWNLOAD UPSCALE SIMULATION
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= SCREEN 4: BOOKINGS ================= -->
+      <section id="screenBookings" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <h3 class="font-cinzel text-lg font-bold text-gold-gradient">RESERVE & SCHEDULE</h3>
+          <span class="text-[9px] bg-gold-500/15 border border-gold-500/40 text-gold-500 px-2 py-0.5 rounded-full font-mono">Secure Access</span>
+        </div>
+
+        <!-- NEW BOOKING FORM -->
+        <div class="glass-card rounded-2xl p-4 space-y-4">
+          <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider flex items-center gap-2">
+            <i class="fa-regular fa-calendar-check"></i> Book Elite Session
+          </h4>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[9px] text-gold-400 uppercase tracking-widest font-mono">Select Artist</label>
+              <select id="bookingArtist" class="w-full px-3 py-2 text-xs rounded-lg glass-input">
+                <option value="Alexander Gold">Alexander Gold (Wedding Lead)</option>
+                <option value="Bella Frame">Bella Frame (Candid & Birthday Specialist)</option>
+                <option value="Marcus Aperture">Marcus Aperture (Elite Corporate Studio)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[9px] text-gold-400 uppercase tracking-widest font-mono">Aesthetics Package</label>
+              <select id="bookingPackage" class="w-full px-3 py-2 text-xs rounded-lg glass-input" onchange="updateBookingPackagePrice()">
+                <option value="Standard Storybook">Standard Storybook (4 Hours, $500)</option>
+                <option value="Royal Cinematic Suite">Royal Cinematic Suite (Full Day, $1,200)</option>
+                <option value="VIP Legacy Legacy Album">VIP Legacy Legacy Album (Unlimited, Multi-photographer, $2,500)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[9px] text-gold-400 uppercase tracking-widest font-mono">Session Date</label>
+                <input type="date" id="bookingDate" value="2026-06-01" class="w-full px-3 py-2 text-xs rounded-lg glass-input">
+              </div>
+              <div>
+                <label class="block text-[9px] text-gold-400 uppercase tracking-widest font-mono">Guest Count</label>
+                <input type="number" id="bookingGuests" value="50" class="w-full px-3 py-2 text-xs rounded-lg glass-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive pricing showcase -->
+          <div class="p-3 bg-dark-950 rounded-xl border border-white/5 flex justify-between items-center">
+            <div>
+              <span class="text-[9px] block text-gray-500 uppercase font-mono">REQUIRED ADVANCE RETAINER</span>
+              <span class="text-xs text-gray-400">Paid now to secure block:</span>
+            </div>
+            <span class="font-cinzel font-bold text-lg text-gold-500" id="bookingAdvanceAmount">$150 USD</span>
+          </div>
+
+          <button onclick="initiateUpiAdvancePayment()" class="w-full py-2.5 bg-gold-gradient text-dark-900 font-bold text-xs tracking-wider rounded-lg flex items-center justify-center gap-1.5 duration-200 hover:opacity-90 shadow-md">
+            PROCEED & VIEW DEPOSIT QR
+          </button>
+        </div>
+
+        <!-- MY BOOKINGS HISTORY -->
+        <div class="space-y-3">
+          <h4 class="font-cinzel text-xs font-bold text-gold-400 uppercase tracking-wider">ACTIVE RESERVATIONS</h4>
+          <div class="space-y-3" id="bookingsHistoryList">
+            <!-- Loaded dynamically from Realtime Database -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= SCREEN 5: REELS & SHORTS ================= -->
+      <section id="screenReels" class="space-y-4 hidden">
+        <div class="flex justify-between items-center">
+          <h3 class="font-cinzel text-lg font-bold text-gold-gradient">CINEMATIC REELS</h3>
+          <span class="text-[9px] bg-red-500/15 text-red-500 border border-red-500/30 px-2 py-0.5 rounded-full font-mono animate-pulse">TRENDING</span>
+        </div>
+
+        <div class="glass-card rounded-2xl overflow-hidden relative" style="height: 480px;">
+          <!-- Simulated Android Reels Panel -->
+          <img id="reelImagePlaceholder" src="https://images.unsplash.com/photo-1519225495810-7512c696505a?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover">
+          
+          <!-- Glass controls overlay -->
+          <div class="absolute inset-x-0 top-0 bg-gradient-to-b from-dark-900/60 to-transparent p-4 flex justify-between items-center">
+            <span class="text-[10px] text-white/90 bg-black/40 rounded-full px-2 py-0.5 font-mono"><i class="fa-solid fa-music text-gold-500 mr-1.5"></i>Sync: Perfect Blue Theme</span>
+            <button onclick="toggleReelMusic()" class="text-white bg-black/40 p-2 rounded-full"><i class="fa-solid fa-volume-high" id="reelVolumeIcon"></i></button>
+          </div>
+
+          <!-- Bottom description -->
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex justify-between items-end">
+            <div class="space-y-1.5 text-xs text-white max-w-[80%] mb-1">
+              <span class="bg-gold-500/20 text-gold-400 border border-gold-500/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">AI Highlight Reel</span>
+              <p class="font-semibold" id="reelTitle">Regency Ballroom Dance Highlight</p>
+              <p class="text-[10px] text-gray-400">Captured in Ultra-HD DSLR 8K with Ambient Lighting Filters.</p>
+            </div>
+            
+            <div class="flex flex-col gap-4 text-center items-center text-white" style="margin-bottom: 4px;">
+              <button onclick="likeReel()" class="flex flex-col items-center group">
+                <span class="p-2.5 bg-black/40 hover:bg-gold-500/20 duration-150 rounded-full"><i class="fa-solid fa-heart text-white group-hover:text-red-500" id="reelLikeIcon"></i></span>
+                <span class="text-[10px] mt-0.5" id="reelLikes">1.2K</span>
+              </button>
+              <button onclick="showReelComments()" class="flex flex-col items-center">
+                <span class="p-2.5 bg-black/40 rounded-full"><i class="fa-solid fa-comment"></i></span>
+                <span class="text-[10px] mt-0.5" id="reelCommentsCount">85</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Left/Right simulated slide controllers -->
+          <button onclick="changeReel(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/25 rounded-full hover:bg-gold-500/20 text-gray-400 hover:text-white"><i class="fa-solid fa-angle-left"></i></button>
+          <button onclick="changeReel(1)" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/25 rounded-full hover:bg-gold-500/20 text-gray-400 hover:text-white"><i class="fa-solid fa-angle-right"></i></button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ================= FULLSCREEN SLIDESHOW / VIEWER ================= -->
+    <div id="fullscreenViewer" class="fixed inset-0 z-50 bg-black flex flex-col justify-between p-4 transition-all duration-300 transform scale-95 opacity-0 pointer-events-none">
+      <div class="flex justify-between items-center text-white z-10 p-2">
+        <div>
+          <h4 id="viewerTitle" class="font-cinzel text-sm text-gold-400 font-bold">Wedding Reception</h4>
+          <span id="viewerMeta" class="text-[9px] text-gray-400 font-mono">Category: Wedding</span>
+        </div>
+        <button onclick="closeFullscreenViewer()" class="p-2 bg-dark-800 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Main center content -->
+      <div class="relative flex-1 flex items-center justify-center">
+        <canvas id="viewerCanvas" class="max-w-full max-h-full object-contain hidden"></canvas>
+        <img id="viewerImage" src="" class="max-w-full max-h-[80vh] object-contain select-none">
+        <!-- Floating simulated semi-transparent gold wire watermark -->
+        <div id="goldWatermark" class="absolute pointer-events-none text-white/5 font-cinzel text-xl uppercase tracking-widest text-center" style="transform: rotate(-30deg);">
+          GS PHOTOGRAPHY PREVIEW ONLY
+        </div>
+        
+        <!-- Left Right triggers -->
+        <button onclick="prevGalleryImage()" class="absolute left-2 text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="nextGalleryImage()" class="absolute right-2 text-white/50 hover:text-white text-2xl"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+
+      <!-- Controls row -->
+      <div class="p-4 bg-dark-900 border border-white/5 rounded-xl flex justify-between items-center z-10">
+        <button onclick="toggleFavorite()" class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 duration-150">
+          <i class="fa-regular fa-heart text-sm" id="favIcon"></i> Favorite
+        </button>
+        <div class="flex gap-2">
+          <button onclick="downloadWithWatermark()" class="px-3 py-1.5 bg-dark-800 text-gold-500 border border-gold-500/20 text-[10px] font-bold rounded-lg uppercase tracking-wider">With Watermark</button>
+          <button onclick="showPremiumUpgradeToast()" class="px-3 py-1.5 bg-gold-gradient text-dark-900 text-[10px] font-bold rounded-lg uppercase tracking-wider"><i class="fa-solid fa-crown mr-1"></i>HD Original</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= DYNAMIC RETRIEVED ADVANCE QR MODAL ================= -->
+    <div id="qrPaymentModal" class="fixed inset-0 z-[60] bg-dark-900/95 flex justify-center items-center p-4 transition-all duration-300 opacity-0 pointer-events-none">
+      <div class="w-full max-w-sm glass-card rounded-2xl p-5 relative text-center space-y-4">
+        <button onclick="closeQrPaymentModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        
+        <h3 class="font-cinzel text-md font-bold text-gold-gradient uppercase">Advance Retainer Invoice</h3>
+        
+        <!-- QR container fetched dynamically -->
+        <div class="mx-auto w-44 h-44 bg-white p-2 rounded-xl border-4 border-gold-500/30 flex items-center justify-center">
+          <img id="paymentQRCode" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=gsphotography@okaxis&pn=GSPhotography&am=150" alt="UPI QR Code" class="w-full h-full object-contain">
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-[9px] block text-gray-500 font-mono">ACCOUNT DETAILS / RECIPIENT</span>
+          <p class="text-xs text-white font-semibold" id="paymentAccountName">GS Photography LLP</p>
+          <p class="text-xs text-gold-500 font-mono tracking-wide" id="paymentUPIId">gsphotography@okaxis</p>
+        </div>
+
+        <div class="p-2.5 bg-dark-950 rounded-lg text-[10px] text-left text-gray-400 text-center">
+          Scan the QR or copy the UPI ID using any UPI application (GPay, PhonePe, Paytm). Retain screenshot.
+        </div>
+
+        <!-- Screenshots Upload Box -->
+        <div class="space-y-2">
+          <label class="block text-[10px] text-gold-400 uppercase tracking-widest font-mono text-left pl-1">Submit Remittance Screenshot</label>
+          <div class="border-2 border-dashed border-gold-500/20 rounded-xl p-4 bg-dark-900/60 relative flex flex-col items-center justify-center cursor-pointer hover:border-gold-500/40" onclick="triggerScreenshotUpload()">
+            <input type="file" id="screenshotFileInput" accept="image/*" class="hidden" onchange="handleScreenshotSelection(event)">
+            <div id="screenshotIconHUD" class="text-center">
+              <i class="fa-regular fa-image text-2xl text-gray-500"></i>
+              <span class="block text-[9px] text-gray-400 mt-1" id="screenshotStatus">Select payment proof image</span>
+            </div>
+            <img id="screenshotPreview" class="hidden w-16 h-16 object-cover rounded border">
+          </div>
+        </div>
+
+        <button onclick="submitBookingReservation()" id="btnSubmitBooking" class="w-full py-2.5 bg-gold-gradient text-dark-900 font-bold text-xs tracking-wider rounded-lg uppercase" disabled>
+          SUBMIT BOOKING screenshot
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= CHAT PORTAL DRAWER ================= -->
+    <button onclick="toggleChatDrawer()" class="fixed bottom-24 right-4 z-40 w-12 h-12 rounded-full bg-gold-gradient text-dark-900 shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 duration-100">
+      <i class="fa-solid fa-comments text-lg"></i>
+    </button>
+
+    <div id="chatDrawer" class="fixed right-0 bottom-20 top-0 w-[80%] max-w-sm z-45 bg-dark-950/95 border-l border-gold-500/15 p-4 flex flex-col transition-all duration-300 transform translate-x-full">
+      <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+        <div class="flex items-center gap-1.5">
+          <i class="fa-solid fa-circle text-green-500 text-[6px] animate-ping"></i>
+          <h4 class="font-cinzel text-xs font-bold text-gold-500">CONCIERGE STREAM</h4>
+        </div>
+        <button onclick="toggleChatDrawer()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- Messages container -->
+      <div class="flex-1 overflow-y-auto space-y-3 mb-4 text-xs pr-1" id="chatArea">
+        <!-- Messages populate dynamically -->
+        <div class="p-2 rounded-lg bg-dark-800 text-left text-gray-300 max-w-[85%]">
+          Hello! Let us know if you have custom packages or custom requests. Live support with Admin Alexander is active.
+        </div>
+      </div>
+
+      <!-- Send row -->
+      <div class="flex gap-2">
+        <input type="text" id="chatInput" placeholder="Message..." class="flex-1 px-3 py-1.5 focus:outline-none rounded-lg glass-input text-xs">
+        <button onclick="sendChatMessage()" class="p-2 bg-gold-gradient text-dark-900 rounded-lg text-xs duration-100"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- ================= NOTIFICATION CENTER DRAWER ================= -->
+    <div id="notificationDrawer" class="fixed right-0 bottom-20 top-0 w-[80%] max-w-sm z-45 bg-dark-950/95 border-l border-gold-500/15 p-4 flex flex-col transition-all duration-300 transform translate-x-full">
+      <div class="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+        <h4 class="font-cinzel text-xs font-bold text-gold-500">ALERTS & ALIGNMENTS</h4>
+        <button onclick="toggleNotificationCenter()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-3" id="notificationsList">
+        <!-- Population dynamically -->
+        <div class="p-3 bg-dark-800 border-l-2 border-gold-500 rounded-lg text-xs">
+          <p class="font-bold text-gold-400">Welcome To GS Photography</p>
+          <p class="text-gray-400 text-[10px] mt-1">Book elite photography packages instantly through our direct payments system!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= STABLE BOTTOM NAVIGATION BAR ================= -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-dark-950/90 backdrop-blur-md border-t border-gold-500/10 z-40">
+      <div class="flex justify-around py-3 text-center">
+        <button onclick="switchScreen('screenHome', this)" class="nav-tab flex-1 flex flex-col items-center gap-1 text-gold-500">
+          <i class="fa-solid fa-house text-lg"></i>
+          <span class="text-[9px] uppercase tracking-widest font-mono">Home</span>
+        </button>
+        <button onclick="switchScreen('screenGallery', this)" class="nav-tab flex-1 flex flex-col items-center gap-1 text-gray-500 hover:text-gold-400">
+          <i class="fa-solid fa-images text-lg"></i>
+          <span class="text-[9px] uppercase tracking-widest font-mono">Gallery</span>
+        </button>
+        <button onclick="switchScreen('screenAITools', this)" class="nav-tab flex-1 flex flex-col items-center gap-1 text-gray-500 hover:text-gold-400">
+          <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+          <span class="text-[9px] uppercase tracking-widest font-mono">AI Tools</span>
+        </button>
+        <button onclick="switchScreen('screenBookings', this)" class="nav-tab flex-1 flex flex-col items-center gap-1 text-gray-500 hover:text-gold-400">
+          <i class="fa-solid fa-calendar-days text-lg"></i>
+          <span class="text-[9px] uppercase tracking-widest font-mono">Book</span>
+        </button>
+        <button onclick="switchScreen('screenReels', this)" class="nav-tab flex-1 flex flex-col items-center gap-1 text-gray-500 hover:text-gold-400">
+          <i class="fa-solid fa-clapperboard text-lg"></i>
+          <span class="text-[9px] uppercase tracking-widest font-mono">Reels</span>
+        </button>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- ================= MASTER CONTROLLER JAVASCRIPT ================= -->
+  <script>
+    // Exact Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEYcInekyy5zCFpDpFsq08sPWggiUkKHM",
+      authDomain: "photography-811d4.firebaseapp.com",
+      databaseURL: "https://photography-811d4-default-rtdb.firebaseio.com",
+      projectId: "photography-811d4",
+      storageBucket: "photography-811d4.firebasestorage.app",
+      messagingSenderId: "358941216862",
+      appId: "1:358941216862:web:3a539c589b7dd4f39124cf",
+      measurementId: "G-KJC45Z82SE"
+    };
+
+    // Firebase state
+    let auth, db, firebaseOffline = false;
+    
+    // Core database nodes mock/real sync
+    let state = {
+      currentUser: null,
+      activeScreen: 'screenHome',
+      bookingTemp: { artist: '', package: '', date: '', guests: 50, advance: 150, screenshot: '' },
+      galleryCategory: 'All',
+      aiToolTab: 'scanner',
+      scannedSelfie: null,
+      scannedResults: [],
+      editorImage: null,
+      currentFilter: 'Original',
+      activeReelIndex: 0,
+      activeGalleryIndex: 0
+    };
+
+    // Lists for simulated database pre-population
+    const defaultGalleries = [
+      { id: 'img1', title: 'Golden Silk Saree', category: 'Wedding', url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80', photographer: 'Alexander Gold', tags: ['face_user1', 'smile'] },
+      { id: 'img2', title: 'Aperture Kiss in Rain', category: 'Wedding', url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80', photographer: 'Alexander Gold', tags: ['face_user1'] },
+      { id: 'img3', title: '18th Balloon Surprise', category: 'Birthday', url: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=400&q=80', photographer: 'Bella Frame', tags: [] },
+      { id: 'img4', title: 'Global Tech Keynote', category: 'Corporate', url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=400&q=80', photographer: 'Marcus Aperture', tags: [] },
+      { id: 'img5', title: 'Decisive Track Finish', category: 'Sports', url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=400&q=80', photographer: 'Marcus Aperture', tags: [] },
+      { id: 'img6', title: 'Graduation Cap Toss', category: 'School', url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=400&q=80', photographer: 'Bella Frame', tags: ['face_user1'] }
+    ];
+
+    const defaultReels = [
+      { id: 'r1', title: 'Midnight Waltz at Rajasthan Palace', url: 'https://images.unsplash.com/photo-1519225495810-7512c696505a?auto=format&fit=crop&w=600&q=80', likes: 1420, comments: 85 },
+      { id: 'r2', title: 'Luxury Cake Smash Cinema', url: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80', likes: 980, comments: 40 },
+      { id: 'r3', title: 'F1 Night Motion blur track view', url: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=600&q=80', likes: 2110, comments: 145 }
+    ];
+
+    const adminEmails = ["Admin@photo.com", "Admin1@photo.com", "Admin2@photo.com"];
+    const photographerEmails = [
+      "Photographer@gmail.com", "Photographer1@gmail.com", "Photographer2@gmail.com",
+      "Photographer3@gmail.com", "Photographer4@gmail.com", "Photographer5@gmail.com"
+    ];
+
+    // ================= MAIN RUNETIME LOADER =================
+    window.addEventListener('load', () => {
+      // 1. Android digital realtime clock
+      updateAndroidClock();
+      setInterval(updateAndroidClock, 1000);
+
+      // 2. Clear splash
+      setTimeout(() => {
+        document.getElementById('splashScreen').classList.add('opacity-0', 'pointer-events-none');
+      }, 1500);
+
+      // 3. Initialize Firebase Custom Client
+      try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        console.log("Firebase initialized successfully.");
+
+        // Realtime listen user
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            state.currentUser = user;
+            triggerRoleCheck(user.email);
+            document.getElementById('activeUserBadge').classList.remove('hidden');
+            document.getElementById('activeUserEmail').textContent = user.email;
+            document.getElementById('authFields').classList.add('hidden');
+            // Listen real-time notification
+            listenNotifications();
+          } else {
+            state.currentUser = null;
+            document.getElementById('activeUserBadge').classList.add('hidden');
+            document.getElementById('authFields').classList.remove('hidden');
+          }
+          syncBookingsHistory();
+        });
+
+      } catch (err) {
+        console.warn("Firebase client offline/restricted mode. Running unified client cache.", err);
+        firebaseOffline = true;
+        // Fallback local accounts validation
+        const cachedUser = localStorage.getItem('gs_user');
+        if (cachedUser) {
+          state.currentUser = JSON.parse(cachedUser);
+          document.getElementById('activeUserBadge').classList.remove('hidden');
+          document.getElementById('activeUserEmail').textContent = state.currentUser.email;
+          document.getElementById('authFields').classList.add('hidden');
+        }
+      }
+
+      // Initialize defaults
+      if (!localStorage.getItem('galleries')) {
+        localStorage.setItem('galleries', JSON.stringify(defaultGalleries));
+      }
+      if (!localStorage.getItem('reels')) {
+        localStorage.setItem('reels', JSON.stringify(defaultReels));
+      }
+
+      // Populate visuals
+      populateGallery();
+      populateReels();
+      syncBookingsHistory();
+      populateLiveMomentsEvents();
+      
+      // Auto-listen cross-frame signals
+      window.addEventListener('message', (e) => {
+        if (e.data === 'sync_required') {
+          syncBookingsHistory();
+          populateGallery();
+          populateLiveMomentsEvents();
+        }
+      });
+    });
+
+    function updateAndroidClock() {
+      const now = new Date();
+      let hrs = now.getHours().toString().padStart(2, '0');
+      let mins = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('androidTime').textContent = `${hrs}:${mins}`;
+    }
+
+    // Role Router
+    function triggerRoleCheck(email) {
+      if (adminEmails.some(x => x.toLowerCase() === email.toLowerCase())) {
+        showToast("Authenticated Administrator", "Routing to Control Core...", "fa-solid fa-user-shield");
+        setTimeout(() => window.location.href = 'admin.html', 1000);
+      } else if (photographerEmails.some(x => x.toLowerCase() === email.toLowerCase())) {
+        showToast("Authenticated Artist", "Routing to Studio Terminal...", "fa-solid fa-camera-retro");
+        setTimeout(() => window.location.href = 'photographer.html', 1000);
+      }
+    }
+
+    // Auth Submission
+    let currentAuthTab = 'login';
+    function setAuthMode(m) {
+      currentAuthTab = m;
+      document.getElementById('tabLogin').className = m === 'login' ? 'flex-1 py-1.5 text-xs rounded font-medium bg-gold-500 text-dark-900' : 'flex-1 py-1.5 text-xs rounded font-medium text-gray-400 hover:text-white';
+      document.getElementById('tabRegister').className = m === 'register' ? 'flex-1 py-1.5 text-xs rounded font-medium bg-gold-500 text-dark-900' : 'flex-1 py-1.5 text-xs rounded font-medium text-gray-400 hover:text-white';
+      document.getElementById('authSubmitBtn').textContent = m === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT';
+    }
+
+    function toggleAuthPanel() {
+      const p = document.getElementById('authPanel');
+      p.classList.toggle('opacity-0');
+      p.classList.toggle('pointer-events-none');
+    }
+
+    function handleAuthSubmit() {
+      const email = document.getElementById('authEmail').value.trim();
+      const pass = document.getElementById('authPassword').value;
+      if (!email || !pass) {
+        showToast("Access Error", "Please provide email and password credentials.", "fa-solid fa-triangle-exclamation");
+        return;
+      }
+
+      if (firebaseOffline) {
+        // Fallback simulate login/register
+        state.currentUser = { email: email, uid: 'local_' + Date.now() };
+        localStorage.setItem('gs_user', JSON.stringify(state.currentUser));
+        showToast("Local Client Active", `Logged in under: ${email}`, "fa-solid fa-user-check");
+        triggerRoleCheck(email);
+        setTimeout(() => {
+          toggleAuthPanel();
+          location.reload();
+        }, 1000);
+      } else {
+        if (currentAuthTab === 'login') {
+          auth.signInWithEmailAndPassword(email, pass)
+            .then(cred => {
+              showToast("Identity Verified", `Welcome back: ${email}`, "fa-solid fa-circle-check");
+              triggerRoleCheck(cred.user.email);
+              toggleAuthPanel();
+            })
+            .catch(err => {
+              showToast("Login Failed", err.message, "fa-solid fa-circle-xmark");
+            });
+        } else {
+          auth.createUserWithEmailAndPassword(email, pass)
+            .then(cred => {
+              showToast("Identity Constructed", "Account successfully built!", "fa-solid fa-id-card");
+              triggerRoleCheck(cred.user.email);
+              toggleAuthPanel();
+            })
+            .catch(err => {
+              showToast("Registration Failed", err.message, "fa-solid fa-circle-xmark");
+            });
+        }
+      }
+    }
+
+    function firebaseLogout() {
+      if (firebaseOffline) {
+        localStorage.removeItem('gs_user');
+        location.reload();
+      } else {
+        auth.signOut().then(() => {
+          location.reload();
+        });
+      }
+    }
+
+    // ================= CORE VIEW PORT TABS SWITCHER =================
+    function switchScreen(screenId, btn) {
+      // Hide all layouts
+      ['screenHome', 'screenGallery', 'screenAITools', 'screenBookings', 'screenReels'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      // Toggle
+      document.getElementById(screenId).classList.remove('hidden');
+      state.activeScreen = screenId;
+
+      // Update button styling
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.className = 'nav-tab flex-1 flex flex-col items-center gap-1 text-gray-500 hover:text-gold-400';
+      });
+      btn.className = 'nav-tab flex-1 flex flex-col items-center gap-1 text-gold-500';
+    }
+
+    // ================= TOASTS & NOTIFICATIONS SYSTEM =================
+    function showToast(title, desc, icon = "fa-solid fa-bell") {
+      const toast = document.getElementById('toastAlert');
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastDesc').textContent = desc;
+      document.getElementById('toastIcon').className = icon;
+      
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.remove('transform', '-translate-y-4');
+      
+      setTimeout(hideToast, 4000);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('toastAlert');
+      toast.classList.add('opacity-0', 'pointer-events-none');
+      toast.classList.add('transform', '-translate-y-4');
+    }
+
+    function toggleChatDrawer() {
+      document.getElementById('chatDrawer').classList.toggle('translate-x-full');
+      syncUserChats();
+    }
+
+    function toggleNotificationCenter() {
+      document.getElementById('notificationDrawer').classList.toggle('translate-x-full');
+      document.getElementById('notificationBadge').classList.add('hidden');
+    }
+
+    // ================= REALTIME CHAT CONCIERGE =================
+    function syncUserChats() {
+      const chatArea = document.getElementById('chatArea');
+      const senderUid = state.currentUser ? state.currentUser.uid : 'guest';
+      
+      if (!firebaseOffline && db) {
+        db.ref('chats').orderByChild('senderId').equalTo(senderUid).on('value', snapshot => {
+          let chatHTML = '';
+          snapshot.forEach(child => {
+            const val = child.val();
+            // User side text
+            chatHTML += `<div class="p-2 rounded-lg bg-gold-500/10 border border-gold-500/20 text-right text-gray-200 max-w-[85%] ml-auto p-2 rounded-xl text-xs">${val.text}</div>`;
+          });
+          if (chatHTML) chatArea.innerHTML = chatHTML;
+        });
+      } else {
+        const chats = JSON.parse(localStorage.getItem(`gs_chats_${senderUid}`) || '[]');
+        let chatHTML = '<div class="p-2 rounded-lg bg-dark-800 text-left text-gray-300 max-w-[85%]">Live Concierge Connected. Type query or custom wedding demands!</div>';
+        chats.forEach(c => {
+          if (c.sender === 'user') {
+            chatHTML += `<div class="p-2 rounded-lg bg-gold-400 text-dark-900 font-semibold text-right max-w-[85%] ml-auto">${c.text}</div>`;
+          } else {
+            chatHTML += `<div class="p-2 rounded-lg bg-dark-800 text-left text-gray-300 max-w-[85%]">${c.text}</div>`;
+          }
+        });
+        chatArea.innerHTML = chatHTML;
+      }
+    }
+
+    function sendChatMessage() {
+      const inp = document.getElementById('chatInput');
+      const text = inp.value.trim();
+      if (!text) return;
+
+      const senderUid = state.currentUser ? state.currentUser.uid : 'guest';
+      
+      if (!firebaseOffline && db) {
+        db.ref('chats').push({
+          senderId: senderUid,
+          text: text,
+          timestamp: Date.now()
+        });
+      } else {
+        const key = `gs_chats_${senderUid}`;
+        const chats = JSON.parse(localStorage.getItem(key) || '[]');
+        chats.push({ sender: 'user', text: text });
+        // Simulate immediate response
+        setTimeout(() => {
+          chats.push({ sender: 'admin', text: `Review of your request starting soon! Our master artist has been aligned on WhatsApp.` });
+          localStorage.setItem(key, JSON.stringify(chats));
+          syncUserChats();
+          window.parent.postMessage('sync_required', '*');
+        }, 1500);
+
+        localStorage.setItem(key, JSON.stringify(chats));
+        syncUserChats();
+      }
+      inp.value = '';
+    }
+
+    function listenNotifications() {
+      if (firebaseOffline || !db) return;
+      const uid = state.currentUser ? state.currentUser.uid : 'anonymous';
+      db.ref('notifications').orderByChild('userId').equalTo(uid).limitToLast(5).on('child_added', snap => {
+        const val = snap.val();
+        document.getElementById('notificationBadge').classList.remove('hidden');
+        showToast("New Live Update", val.body, "fa-solid fa-bell-concierge");
+      });
+    }
+
+    // ================= REALTIME DYNAMIC GALLERY =================
+    function populateGallery() {
+      const grid = document.getElementById('masonryGrid');
+      const data = JSON.parse(localStorage.getItem('galleries') || '[]');
+      
+      let html = '';
+      data.forEach((pic, index) => {
+        if (state.galleryCategory !== 'All' && pic.category !== state.galleryCategory) return;
+        
+        html += `
+          <div class="glass-card rounded-xl overflow-hidden shadow-md cursor-pointer animate-fade-in group" onclick="launchFullscreenViewer(${index})">
+            <div class="relative h-32 bg-dark-950 overflow-hidden">
+              <img src="${pic.url}" class="w-full h-full object-cover filter brightness-95 transition-transform duration-300 group-hover:scale-105">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <span class="absolute top-2 right-2 text-[8px] bg-black/60 text-gold-500 font-mono tracking-wide px-1.5 py-0.5 rounded uppercase">${pic.category}</span>
+            </div>
+            <div class="p-2">
+              <h5 class="text-[11px] font-bold text-white truncate font-cinzel">${pic.title}</h5>
+              <p class="text-[9px] text-gray-400 mt-0.5 truncate">Artist: ${pic.photographer}</p>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+    }
+
+    function openGalleryFilter(cat) {
+      setGalleryFilter(cat);
+      switchScreen('screenGallery', document.querySelectorAll('.nav-tab')[1]);
+    }
+
+    function setGalleryFilter(cat) {
+      state.galleryCategory = cat;
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.className = 'category-btn flex-shrink-0 px-3 py-1 bg-dark-800 text-gray-400 text-xs font-semibold rounded-full border border-white/5 hover:border-gold-500/40';
+        if (btn.textContent.includes(cat) || (cat === 'All' && btn.textContent === 'All')) {
+          btn.className = 'category-btn flex-shrink-0 px-3 py-1 bg-gold-500 text-dark-900 text-xs font-semibold rounded-full duration-150';
+        }
+      });
+      populateGallery();
+    }
+
+    // ================= FULLSCREEN PORTRAIT ZOOM + WATERMARK CANVAS =================
+    function launchFullscreenViewer(index) {
+      state.activeGalleryIndex = index;
+      const data = JSON.parse(localStorage.getItem('galleries') || '[]');
+      const pic = data[index];
+      if (!pic) return;
+
+      document.getElementById('viewerTitle').textContent = pic.title;
+      document.getElementById('viewerMeta').textContent = `Category: ${pic.category} | Capture: ${pic.photographer}`;
+      document.getElementById('viewerImage').src = pic.url;
+
+      const viewer = document.getElementById('fullscreenViewer');
+      viewer.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+      viewer.classList.add('scale-100');
+    }
+
+    function closeFullscreenViewer() {
+      const viewer = document.getElementById('fullscreenViewer');
+      viewer.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+    }
+
+    function nextGalleryImage() {
+      const data = JSON.parse(localStorage.getItem('galleries') || '[]');
+      let nextIdx = state.activeGalleryIndex + 1;
+      if (nextIdx >= data.length) nextIdx = 0;
+      launchFullscreenViewer(nextIdx);
+    }
+    function prevGalleryImage() {
+      const data = JSON.parse(localStorage.getItem('galleries') || '[]');
+      let prevIdx = state.activeGalleryIndex - 1;
+      if (prevIdx < 0) prevIdx = data.length - 1;
+      launchFullscreenViewer(prevIdx);
+    }
+
+    function toggleFavorite() {
+      const heart = document.getElementById('favIcon');
+      heart.classList.toggle('fa-regular');
+      heart.classList.toggle('fa-solid');
+      heart.classList.toggle('text-red-500');
+      showToast("Toggled Portfolio Favoriting", "Instantly updated in cloud collections", "fa-regular fa-heart");
+    }
+
+    function downloadWithWatermark() {
+      const data = JSON.parse(localStorage.getItem('galleries') || '[]');
+      const pic = data[state.activeGalleryIndex];
+      // Create offscreen canvas simulation to render actual custom canvas download
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        // Watermark style text overlay
+        ctx.rotate(-30 * Math.PI / 180);
+        ctx.font = `${Math.floor(canvas.width / 13)}px Cinzel`;
+        ctx.fillStyle = "rgba(212, 175, 55, 0.18)";
+        ctx.fillText("GS PHOTOGRAPHY - DEMO", -canvas.width/4, canvas.height/2);
+        
+        const dataUrl = canvas.toDataURL("image/png");
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `GS_Watermarked_${pic.title}.png`;
+        a.click();
+      };
+      img.src = pic.url;
+    }
+
+    function showPremiumUpgradeToast() {
+      showToast("Premium Original Lock", "Unlock full-res HD downloads without watermarks. Upgrade to VIP in the main portal!", "fa-solid fa-crown");
+    }
+
+    // ================= AI POWERED FACE MATCHING (SIMULATED REDIRECTION) =================
+    function triggerSelfieUpload() {
+      document.getElementById('selfieFileInput').click();
+    }
+
+    function handleSelfieSelection(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.scannedSelfie = evt.target.result;
+        document.getElementById('scannerIconHUD').classList.add('hidden');
+        const box = document.getElementById('scannerPreviewBox');
+        box.classList.remove('hidden');
+        document.getElementById('selfiePreviewImage').src = evt.target.result;
+        
+        // Update CTA
+        const btn = document.getElementById('startScanBtn');
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'BOOT AI DISCOVERY ENGINE';
+        btn.className = 'w-full py-2.5 bg-gold-gradient text-dark-900 font-bold rounded-lg text-xs tracking-wider flex items-center justify-center gap-2';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function startAIScan() {
+      const spinner = document.getElementById('scanSpinner');
+      const text = document.getElementById('scanBtnText');
+      spinner.classList.remove('hidden');
+      text.textContent = 'EXECUTING BIOMETRIC HASH MATCH...';
+
+      setTimeout(() => {
+        spinner.classList.add('hidden');
+        text.textContent = 'MATCH COMPLETION SUCCESSFUL';
+        
+        // Show scan results and match tags
+        document.getElementById('aiMatchedGroup').classList.remove('hidden');
+        
+        // Query face tagged pictures
+        const dbPics = JSON.parse(localStorage.getItem('galleries') || '[]');
+        const matched = dbPics.filter(p => p.tags && p.tags.includes('face_user1'));
+        
+        const gr = document.getElementById('aiMatchedPhotosList');
+        gr.innerHTML = matched.map((p, idx) => `
+          <div class="relative rounded-xl overflow-hidden border border-gold-500/20" onclick="openGalleryFilter('Wedding')">
+            <img src="${p.url}" class="w-full h-24 object-cover filter brightness-95">
+            <span class="absolute bottom-1 right-1 bg-black/70 text-[7px] text-gold-400 px-1 rounded">Confidence: 98.4%</span>
+          </div>
+        `).join('');
+        
+        showToast("Biometric Lock Unlocked", "Matched photos loaded dynamically from metadata clusters.", "fa-solid fa-face-viewfinder");
+      }, 2500);
+    }
+
+    function setAIToolTab(tab) {
+      state.aiToolTab = tab;
+      const bScan = document.getElementById('btnTabScanner');
+      const bEdit = document.getElementById('btnTabEditor');
+      const scanMod = document.getElementById('aiScannerModule');
+      const editMod = document.getElementById('aiEditorModule');
+      
+      if (tab === 'scanner') {
+        bScan.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-gold-500 text-dark-900 transition-all duration-200';
+        bEdit.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all duration-200';
+        scanMod.classList.remove('hidden');
+        editMod.classList.add('hidden');
+      } else {
+        bEdit.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-gold-500 text-dark-900 transition-all duration-200';
+        bScan.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all duration-200';
+        editMod.classList.remove('hidden');
+        scanMod.classList.add('hidden');
+      }
+    }
+
+    // ================= AI DARKROOM INTERACTIVE FILTERS =================
+    function triggerEditorUpload() {
+      document.getElementById('editorFileInput').click();
+    }
+
+    function handleEditorSelection(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.editorImage = new Image();
+        state.editorImage.onload = function() {
+          document.getElementById('editorPlaceholder').classList.add('hidden');
+          document.getElementById('editorImageParent').classList.remove('hidden');
+          document.getElementById('btnDownloadEdit').disabled = false;
+          
+          updateAIEditor();
+        }
+        state.editorImage.src = evt.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // Redraw and transform editor view client side canvas
+    function updateAIEditor() {
+      if (!state.editorImage) return;
+
+      const canvas = document.getElementById('editingCanvas');
+      const ctx = canvas.getContext('2d');
+      const tempVal = parseInt(document.getElementById('slideTemp').value);
+      const blurVal = parseInt(document.getElementById('slideBlur').value);
+      const expVal = parseInt(document.getElementById('slideExposure').value);
+
+      document.getElementById('valTemp').textContent = `${tempVal}%`;
+      document.getElementById('valBlur').textContent = `${blurVal}px`;
+      document.getElementById('valExposure').textContent = `${expVal}%`;
+
+      canvas.width = state.editorImage.width;
+      canvas.height = state.editorImage.height;
+      ctx.clearRect(0,0, canvas.width, canvas.height);
+
+      // Web filter string simulation
+      let filterString = `blur(${blurVal}px) brightness(${100 + expVal}%) contrast(${100 + expVal/2}%)`;
+      if (state.currentFilter === 'VintageNoir') {
+        filterString += ' grayscale(100%)';
+      } else if (state.currentFilter === 'GoldenHour') {
+        filterString += ' sepia(40%) saturate(140%) hue-rotate(-10deg)';
+      } else if (state.currentFilter === 'RoyalCinematic') {
+        filterString += ' saturate(120%) contrast(110%)';
+      } else if (state.currentFilter === 'NeonGlow') {
+        filterString += ' hue-rotate(85deg) saturate(180%)';
+      }
+
+      ctx.filter = filterString;
+      ctx.drawImage(state.editorImage, 0, 0);
+    }
+
+    function applyPreset(f) {
+      state.currentFilter = f;
+      document.getElementById('currentFilterText').textContent = f;
+      updateAIEditor();
+      showToast("Preset Ingested", `Filter preset '${f}' successfully compiled.`, "fa-solid fa-wand-magic-sparkles");
+    }
+
+    function downloadEditedImage() {
+      const canvas = document.getElementById('editingCanvas');
+      const dataUrl = canvas.toDataURL("image/jpeg");
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `GS_DeepL_AI_Mastered_HDR.jpg`;
+      a.click();
+    }
+
+    // ================= UPWARD COUNTER & SECTIONS FOR BOOKINGS =================
+    function updateBookingPackagePrice() {
+      const p = document.getElementById('bookingPackage').value;
+      const advance = document.getElementById('bookingAdvanceAmount');
+      if (p.includes('$500')) advance.textContent = '$150 USD';
+      else if (p.includes('$1,200')) advance.textContent = '$400 USD';
+      else advance.textContent = '$900 USD';
+    }
+
+    function initiateUpiAdvancePayment() {
+      const date = document.getElementById('bookingDate').value;
+      if (!date) {
+        showToast("Scheduling Lock", "Choose active calendar date.", "fa-solid fa-calendar");
+        return;
+      }
+      
+      // Get the QR detail setup by payment settings from Database / localStorage fallback
+      const paymentSettings = JSON.parse(localStorage.getItem('qrPayments') || '{"upiId":"gsphotography@okaxis","accountName":"GS Photography LLP","qrCodeUrl":""}');
+      
+      document.getElementById('paymentUPIId').textContent = paymentSettings.upiId;
+      document.getElementById('paymentAccountName').textContent = paymentSettings.accountName;
+      if (paymentSettings.qrCodeUrl) {
+        document.getElementById('paymentQRCode').src = paymentSettings.qrCodeUrl;
+      } else {
+        const amt = document.getElementById('bookingAdvanceAmount').textContent.replace('$', '').replace(' USD', '');
+        document.getElementById('paymentQRCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${paymentSettings.upiId}&pn=GSPhotography&am=${amt}`;
+      }
+
+      // Show payment modal
+      const modal = document.getElementById('qrPaymentModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeQrPaymentModal() {
+      document.getElementById('qrPaymentModal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function triggerScreenshotUpload() {
+      document.getElementById('screenshotFileInput').click();
+    }
+
+    function handleScreenshotSelection(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.bookingTemp.screenshot = evt.target.result;
+        document.getElementById('screenshotIconHUD').classList.add('hidden');
+        document.getElementById('screenshotPreview').classList.remove('hidden');
+        document.getElementById('screenshotPreview').src = evt.target.result;
+        
+        const btn = document.getElementById('btnSubmitBooking');
+        btn.disabled = false;
+        btn.className = 'w-full py-2.5 bg-gold-gradient text-dark-900 font-bold text-xs tracking-wider rounded-lg uppercase hover:opacity-90';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function submitBookingReservation() {
+      const artist = document.getElementById('bookingArtist').value;
+      const packName = document.getElementById('bookingPackage').value;
+      const dateString = document.getElementById('bookingDate').value;
+      const guests = parseInt(document.getElementById('bookingGuests').value || 10);
+      const advPrice = document.getElementById('bookingAdvanceAmount').textContent;
+      
+      const newBk = {
+        id: 'bk_' + Date.now(),
+        userId: state.currentUser ? state.currentUser.uid : 'guest',
+        userName: state.currentUser ? state.currentUser.email : 'Guest Client',
+        artist: artist,
+        package: packName,
+        date: dateString,
+        guests: guests,
+        advance: advPrice,
+        screenshot: state.bookingTemp.screenshot,
+        status: 'Pending Verification',
+        timestamp: Date.now()
+      };
+
+      // Push database or local storage
+      const existing = JSON.parse(localStorage.getItem('bookings') || '[]');
+      existing.push(newBk);
+      localStorage.setItem('bookings', JSON.stringify(existing));
+
+      if (!firebaseOffline && db) {
+        db.ref('bookings/' + newBk.id).set(newBk);
+      }
+
+      showToast("Booking Initiated", "Deposit queued for validation. Check status tracker shortly.", "fa-solid fa-clock");
+      closeQrPaymentModal();
+      
+      // Clear forms
+      document.getElementById('screenshotIconHUD').classList.remove('hidden');
+      document.getElementById('screenshotPreview').classList.add('hidden');
+      document.getElementById('btnSubmitBooking').disabled = true;
+
+      syncBookingsHistory();
+      
+      // Post frame synchronizations
+      window.parent.postMessage('sync_required', '*');
+    }
+
+    function syncBookingsHistory() {
+      const uid = state.currentUser ? state.currentUser.uid : 'guest';
+      const container = document.getElementById('bookingsHistoryList');
+      const allBk = JSON.parse(localStorage.getItem('bookings') || '[]');
+      const userBk = allBk.filter(b => b.userId === uid);
+
+      if (userBk.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 text-center text-gray-500 border border-dashed border-white/5 rounded-xl">
+            No booking streams found. Use form above to register lock.
+          </div>
+        `;
+        return;
+      }
+
+      let bkHTML = '';
+      userBk.reverse().forEach(b => {
+        let badgeColor = 'bg-orange-500/15 border-orange-500/40 text-orange-400';
+        if (b.status === 'Confirmed' || b.status === 'Approved') badgeColor = 'bg-green-500/15 border-green-500/40 text-green-400';
+        else if (b.status === 'Rejected') badgeColor = 'bg-red-500/15 border-red-500/40 text-red-500';
+
+        bkHTML += `
+          <div class="p-3.5 glass-card rounded-xl border-l-4 ${b.status === 'Confirmed' || b.status === 'Approved' ? 'border-l-green-500' : 'border-l-gold-500'} space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <h5 class="font-bold text-xs text-white">${b.artist}</h5>
+                <p class="text-[9px] text-gray-400 font-mono">${b.package}</p>
+                <p class="text-[9px] text-gold-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${b.date}</p>
+              </div>
+              <span class="text-[8px] font-mono border uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeColor}">${b.status}</span>
+            </div>
+            ${b.status === 'Pending Verification' ? `
+              <div class="pt-2 border-t border-white/5 flex justify-between items-center text-[8px] text-gray-500">
+                <span>RETAINER SUBMITTED: ${b.advance}</span>
+                <span class="text-gold-500"><i class="fa-solid fa-spinner animate-spin mr-1"></i>Wait approval</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      container.innerHTML = bkHTML;
+    }
+
+    // ================= REELS SWIPE LOGIC =================
+    function populateReels() {
+      const data = JSON.parse(localStorage.getItem('reels') || '[]');
+      const current = data[state.activeReelIndex];
+      if (!current) return;
+
+      document.getElementById('reelImagePlaceholder').src = current.url;
+      document.getElementById('reelTitle').textContent = current.title;
+      document.getElementById('reelLikes').textContent = `${(current.likes / 1000).toFixed(1)}K`;
+      document.getElementById('reelCommentsCount').textContent = current.comments;
+    }
+
+    function changeReel(delta) {
+      const data = JSON.parse(localStorage.getItem('reels') || '[]');
+      let nextIdx = state.activeReelIndex + delta;
+      if (nextIdx >= data.length) nextIdx = 0;
+      if (nextIdx < 0) nextIdx = data.length - 1;
+      
+      state.activeReelIndex = nextIdx;
+      // Reset like icon
+      document.getElementById('reelLikeIcon').className = 'fa-solid fa-heart text-white';
+      
+      populateReels();
+    }
+
+    function likeReel() {
+      const icon = document.getElementById('reelLikeIcon');
+      const countEl = document.getElementById('reelLikes');
+      
+      if (icon.className.includes('text-red-500')) {
+        icon.className = 'fa-solid fa-heart text-white';
+        // Decrement
+        const val = parseFloat(countEl.textContent) - 0.1;
+        countEl.textContent = `${val.toFixed(1)}K`;
+      } else {
+        icon.className = 'fa-solid fa-heart text-red-500 scale-125 duration-100 transition-all';
+        const val = parseFloat(countEl.textContent) + 0.1;
+        countEl.textContent = `${val.toFixed(1)}K`;
+        showToast("Reel Loved", "Influenced highlight feeds", "fa-solid fa-heart-circle-check");
+      }
+    }
+
+    function toggleReelMusic() {
+      const el = document.getElementById('reelVolumeIcon');
+      el.classList.toggle('fa-volume-high');
+      el.classList.toggle('fa-volume-xmark');
+      if (el.className.includes('fa-volume-xmark')) {
+        showToast("Music Muted", "DSLR audio trace suspended.", "fa-solid fa-volume-xmark");
+      } else {
+        showToast("Music Restored", "Beatsync ambient trace initialized.", "fa-solid fa-volume-high");
+      }
+    }
+
+    function populateLiveMomentsEvents() {
+      const defaultEvents = [
+        {
+          id: "event_1",
+          name: "Elite Royal Rajasthan Wedding",
+          date: "2026-05-15",
+          visibility: "public",
+          theme: "Wedding",
+          coverUrl: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=150&q=80"
+        },
+        {
+          id: "event_2",
+          name: "Global Tech Summit Dubai",
+          date: "2026-06-10",
+          visibility: "public",
+          theme: "Corporate",
+          coverUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=150&q=80"
+        },
+        {
+          id: "event_3",
+          name: "Plaza 18th Balloon Surprise",
+          date: "2026-04-20",
+          visibility: "public",
+          theme: "Birthday",
+          coverUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=150&q=80"
+        }
+      ];
+
+      if (!localStorage.getItem('events')) {
+        localStorage.setItem('events', JSON.stringify(defaultEvents));
+      }
+
+      const events = JSON.parse(localStorage.getItem('events') || '[]');
+      const publicEvents = events.filter(e => e.visibility === 'public');
+      
+      const container = document.getElementById('storiesList');
+      if (!container) return;
+
+      if (publicEvents.length === 0) {
+        container.innerHTML = `
+          <div class="py-2 text-[10px] text-gray-500 italic">No public moments broadcasted yet.</div>
+        `;
+        return;
+      }
+
+      let html = '';
+      publicEvents.forEach(ev => {
+        html += `
+          <div class="flex-shrink-0 w-16 text-center cursor-pointer group" onclick="openStoryViewer('${ev.theme}')" title="${ev.name} (${ev.date})">
+            <div class="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-gold-500 to-amber-700 hover:scale-105 duration-200 transition-all">
+              <img src="${ev.coverUrl}" class="w-full h-full rounded-full object-cover border-2 border-dark-900">
+            </div>
+            <span class="text-[9px] mt-1 block truncate text-gray-400 group-hover:text-gold-400 transition-colors">${ev.name.split(' ')[0] || ev.theme}</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function openStoryViewer(cat) {
+      openGalleryFilter(cat);
+    }
+  </script>
+</body>
+</html>

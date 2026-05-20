@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GS Photography - Photographer Terminal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;950&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              400: '#f1e09d',
+              500: '#d4af37',
+              600: '#b89028',
+              700: '#8a6818',
+            },
+            dark: {
+              900: '#050505',
+              850: '#0c0c0c',
+              800: '#0e0e0e',
+              700: '#151515',
+              600: '#1f1f1f',
+              500: '#2b2b2b',
+            }
+          },
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            poppins: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050505; font-family: 'Poppins', sans-serif; overflow-x: hidden; color: #F5F5F5; }
+    .text-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .bg-gold-gradient {
+      background: linear-gradient(135deg, #f1e09d 0%, #d4af37 50%, #9e7a28 100%);
+    }
+    .glass-card {
+      background: rgba(14, 14, 14, 0.75);
+      backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+    .glass-input {
+      background: rgba(8, 8, 8, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      color: #F5F5F5;
+    }
+    .glass-input:focus {
+      border-color: #d4af37;
+      outline: none;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    }
+  </style>
+</head>
+<body class="text-[#F5F5F5] min-h-screen pb-20">
+
+  <!-- SPLASH -->
+  <div id="splashScreen" class="fixed inset-0 z-[100] bg-dark-900 flex flex-col items-center justify-center transition-all duration-500">
+    <div class="text-center animate-pulse">
+      <i class="fa-solid fa-camera-retro text-4xl text-gold-500 mb-2"></i>
+      <h1 class="font-cinzel text-2xl font-bold tracking-widest text-gold-gradient">STUDIO TERMINAL</h1>
+      <p class="text-[10px] text-gray-500 font-mono tracking-widest">GS PHOTOGRAPHY VIP ARTISTS</p>
+    </div>
+  </div>
+
+  <div id="mainApp" class="max-w-md mx-auto min-h-screen flex flex-col relative bg-dark-900 border-x border-white/5">
+    
+    <!-- Status bar -->
+    <div class="px-5 py-2 flex justify-between items-center bg-dark-950 text-xs font-mono border-b border-white/5 select-none text-gray-500">
+      <span id="androidTime">07:30</span>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[9px] bg-gold-500/10 text-gold-500 border border-gold-500/30 px-1 py-0.5 rounded font-poppins">ARTIST ONLINE</span>
+        <i class="fa-solid fa-wifi text-gold-500"></i>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="p-4 flex justify-between items-center glass-card border-t-0 border-x-0 sticky top-0 z-40">
+      <div class="flex items-center gap-2">
+        <div class="p-2 bg-gold-500/10 border border-gold-500/20 rounded-lg text-gold-500">
+          <i class="fa-solid fa-user-circle"></i>
+        </div>
+        <div>
+          <h2 class="font-cinzel font-bold text-sm text-gold-gradient leading-none">Studio Terminal</h2>
+          <span class="text-[8px] text-gray-500 font-mono" id="artistEmail">Photographer@gmail.com</span>
+        </div>
+      </div>
+      <button onclick="logoutArtist()" class="px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-[10px] uppercase font-mono font-bold tracking-wider">Leave</button>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 p-4 space-y-6">
+
+      <!-- BOARD SEC 1: METRICS GRID -->
+      <section class="grid grid-cols-2 gap-3">
+        <div class="p-3.5 glass-card rounded-2xl relative overflow-hidden">
+          <i class="fa-solid fa-users absolute right-3 bottom-3 text-white/5 text-2xl"></i>
+          <span class="text-[9px] text-gray-400 block font-mono">CLIENT FOOTPRINT</span>
+          <span class="text-xl font-cinzel font-bold text-white mt-1 block">84 Active</span>
+          <span class="text-[8px] text-green-400 mt-1 block font-mono font-medium"><i class="fa-solid fa-arrow-trend-up"></i> +12% Growth</span>
+        </div>
+        <div class="p-3.5 glass-card rounded-2xl relative overflow-hidden">
+          <i class="fa-solid fa-circle-dollar-to-slot absolute right-3 bottom-3 text-white/5 text-2xl"></i>
+          <span class="text-[9px] text-gray-400 block font-mono">ESTIMATED REVENUE</span>
+          <span class="text-xl font-cinzel font-bold text-gold-500 mt-1 block">$14,250</span>
+          <span class="text-[8px] text-yellow-500 mt-1 block font-mono font-medium"><i class="fa-solid fa-wallet"></i> Pending Adv: 4</span>
+        </div>
+      </section>
+
+      <!-- SEC 2: BUSINESS PERFORMANCE ANALYTICS CHART -->
+      <section class="glass-card rounded-2xl p-4 space-y-4">
+        <div class="flex justify-between items-center">
+          <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-widest uppercase">Performance Index</h4>
+          <span class="text-[8px] bg-gold-500/10 border border-gold-500/20 text-gold-400 px-2 py-0.5 rounded-full font-mono">Weekly Stream</span>
+        </div>
+        <!-- Embedded CSS-based flex graph -->
+        <div class="h-32 flex justify-around items-end gap-2 pt-2 border-b border-white/5">
+          <div class="text-center w-full flex flex-col items-center">
+            <span class="text-[8px] text-gray-500">$2.1K</span>
+            <div class="w-2.5 bg-dark-600 rounded-t h-12"></div>
+            <span class="text-[9px] text-gray-400 mt-1">S1</span>
+          </div>
+          <div class="text-center w-full flex flex-col items-center">
+            <span class="text-[8px] text-gray-500">$3.8K</span>
+            <div class="w-2.5 bg-dark-600 rounded-t h-20"></div>
+            <span class="text-[9px] text-gray-400 mt-1">S2</span>
+          </div>
+          <div class="text-center w-full flex flex-col items-center">
+            <span class="text-[8px] text-gold-400 font-bold">$6.4K</span>
+            <div class="w-2.5 bg-gold-gradient rounded-t h-28 shadow-[0_0_8px_#d4af37]"></div>
+            <span class="text-[9px] text-gold-500 font-bold mt-1">S3</span>
+          </div>
+          <div class="text-center w-full flex flex-col items-center">
+            <span class="text-[8px] text-gray-500">$1.9K</span>
+            <div class="w-2.5 bg-dark-600 rounded-t h-10"></div>
+            <span class="text-[9px] text-gray-400 mt-1">S4</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEC 2.5: ASSIGNED SHOOTS AND EVENTS -->
+      <section class="glass-card rounded-2xl p-4 space-y-4">
+        <div class="flex justify-between items-center border-b border-white/5 pb-2">
+          <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-alt text-gold-500"></i> Assigned Shoots & Events
+          </h4>
+          <span class="text-[9px] text-[#D4AF37] font-mono font-bold" id="artistEventCount">0 Active</span>
+        </div>
+        <div class="space-y-2 max-h-52 overflow-y-auto pr-1 scrollbar-none animate-fade-in text-xs" id="artistEventsList">
+          <!-- Dynamically populated from localStorage/Firebase 'events' -->
+          <div class="py-2 text-[10px] text-gray-500 italic text-center">Scanning contract networks...</div>
+        </div>
+      </section>
+
+      <!-- SEC 3: SMART MULTI-TAG UPLOAD ENGINE -->
+      <section id="uploadSection" class="glass-card rounded-2xl p-4 space-y-4">
+        <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider uppercase flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Realtime Media Ingest
+        </h4>
+        
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-[9px] text-gold-400 uppercase tracking-widest pl-1 mb-1 font-mono">Aesthetics Title</label>
+            <input type="text" id="uploadTitle" class="w-full px-3 py-2 rounded-lg glass-input" placeholder="e.g., Royal Ballroom Entrance">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[9px] text-gold-400 uppercase tracking-widest pl-1 mb-1 font-mono">Category Node</label>
+              <select id="uploadCategory" class="w-full px-3 py-2 rounded-lg glass-input">
+                <option value="Wedding">Wedding</option>
+                <option value="Birthday">Birthday</option>
+                <option value="Corporate">Corporate</option>
+                <option value="Sports">Sports</option>
+                <option value="School">School</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[9px] text-gold-400 uppercase tracking-widest pl-1 mb-1 font-mono">Face Metadata string</label>
+              <input type="text" id="uploadFaceTag" class="w-full px-3 py-2 rounded-lg glass-input" placeholder="e.g., face_user1" value="face_user1">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[9px] text-gold-400 uppercase tracking-widest pl-1 mb-1 font-mono">Direct Source URL</label>
+            <input type="text" id="uploadUrl" class="w-full px-3 py-2 rounded-lg glass-input" placeholder="https://images.unsplash.com/photo-..." value="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80">
+          </div>
+
+          <!-- Simulated progress slider with action -->
+          <div class="hidden pt-1 space-y-1.5" id="progressGroup">
+            <div class="flex justify-between items-center text-[9px] font-mono text-gold-500">
+              <span id="progressTxt">ENCRYPTING METADATA...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-dark-900 h-1.5 rounded-full overflow-hidden">
+              <div id="progressBar" class="bg-gold-gradient h-full duration-150" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <button onclick="executeIngestPublish()" class="w-full py-2.5 bg-gold-gradient text-dark-900 font-bold text-xs tracking-widest rounded-lg uppercase shadow-lg duration-200 hover:opacity-90">
+            REALTIME DEEP PUBLISH
+          </button>
+        </div>
+      </section>
+
+      <!-- BOARD SEC 4: WATERMARK CODELINES -->
+      <section class="glass-card rounded-2xl p-4 space-y-3">
+        <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider uppercase flex items-center gap-1.5">
+          <i class="fa-solid fa-signature"></i> Watermark Brand Control
+        </h4>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between items-center text-[10px] text-gray-400">
+            <span>Watermark Position</span>
+            <span class="text-gold-500 font-mono">Bottom Right Locked</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px] text-gray-400">
+            <span>Corporate Branding Node</span>
+            <input type="text" id="watermarkText" value="GS PHOTOGRAPHY ©" class="w-40 px-2 py-0.5 rounded border border-gold-500/20 bg-black text-white text-[9px] font-mono text-right">
+          </div>
+          <button onclick="saveWatermark()" class="w-full py-1.5 bg-dark-800 border border-gold-500/20 text-gold-500 rounded-lg text-[9px] uppercase tracking-wider font-semibold hover:bg-gold-500 hover:text-dark-900">
+            REBUILD BRAND SIGNATURE
+          </button>
+        </div>
+      </section>
+
+      <!-- BOARD SEC 5: PRIVATE GALLERY ACCESS QR CODES -->
+      <section class="glass-card rounded-2xl p-4 space-y-4">
+        <div class="flex justify-between items-center">
+          <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider uppercase"><i class="fa-solid fa-id-card-clip mr-1.5"></i>Invite Generative Engine</h4>
+          <span class="text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-mono">Private Access</span>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="flex justify-between items-center bg-dark-950 p-2.5 rounded-xl border border-white/5">
+            <div>
+              <p class="font-semibold text-white">Client Lock (User1)</p>
+              <p class="text-[9px] text-gray-500 mt-0.5">Biometric gallery access whitelist</p>
+            </div>
+            <!-- Access toggles -->
+            <button id="btnToggleAccess" onclick="toggleDownloadPrivilege()" class="px-2.5 py-1 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-mono font-bold uppercase">
+              Download Permitted
+            </button>
+          </div>
+          
+          <button onclick="triggerQRInviteBuild()" class="w-full py-2 bg-dark-800 text-gold-500 border border-gold-500/30 font-semibold text-xs rounded-lg uppercase tracking-wider">
+            GENERATE UNIQUE GALLERY QR INVITE
+          </button>
+
+          <!-- Generated INVITE DISPLAY -->
+          <div id="inviteBox" class="hidden text-center p-3 border border-gold-500/10 bg-dark-950 rounded-xl space-y-3">
+            <p class="text-[10px] text-gold-400 font-cinzel">VIP PASS GENERATED</p>
+            <div class="w-32 h-32 mx-auto bg-white p-1.5 rounded-lg">
+              <img id="inviteQRImg" src="" class="w-full h-full object-contain">
+            </div>
+            <p class="text-[8px] text-gray-500 font-mono">Invite Key: client_pass_92u1a052</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOARD SEC 6: ACTIVE CHATS PORTAL -->
+      <section class="glass-card rounded-2xl p-4 space-y-4">
+        <h4 class="font-cinzel text-xs font-bold text-gold-400 tracking-wider uppercase"><i class="fa-solid fa-messages mr-1.5"></i>Live client conversation</h4>
+        <div class="space-y-3">
+          <!-- Small scroll view for active chat -->
+          <div class="h-32 overflow-y-auto bg-dark-950 rounded-xl p-3 border border-white/5 space-y-2.5 text-xs text-left" id="convoBox">
+            <!-- Syncs -->
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="convoInp" placeholder="Enter message..." class="flex-1 px-3 py-1.5 text-xs rounded-lg glass-input focus:outline-none">
+            <button onclick="sendConvo()" class="p-2 bg-gold-gradient text-dark-900 rounded-lg text-xs"><i class="fa-solid fa-reply"></i></button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- TOAST POPUP -->
+    <div id="toastAlert" class="fixed top-12 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-sm glass-card rounded-xl p-4 shadow-2xl transition-all duration-500 opacity-0 pointer-events-none transform -translate-y-4">
+      <div class="flex items-start gap-3">
+        <div class="p-2 bg-gold-500/15 rounded-lg text-gold-500"><i class="fa-solid fa-bell" id="toastIcon"></i></div>
+        <div class="flex-1">
+          <h4 class="font-semibold text-sm text-gold-400" id="toastTitle">Artist Alert</h4>
+          <p class="text-xs text-gray-300 mt-1" id="toastDesc">Status changes updated.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEYcInekyy5zCFpDpFsq08sPWggiUkKHM",
+      authDomain: "photography-811d4.firebaseapp.com",
+      databaseURL: "https://photography-811d4-default-rtdb.firebaseio.com",
+      projectId: "photography-811d4",
+      storageBucket: "photography-811d4.firebasestorage.app",
+      messagingSenderId: "358941216862",
+      appId: "1:358941216862:web:3a539c589b7dd4f39124cf",
+      measurementId: "G-KJC45Z82SE"
+    };
+
+    let auth, db, firebaseOffline = false;
+
+    window.addEventListener('load', () => {
+      // Clock
+      setInterval(() => {
+        const now = new Date();
+        document.getElementById('androidTime').textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      }, 1000);
+
+      // Splash
+      setTimeout(() => {
+        document.getElementById('splashScreen').classList.add('opacity-0', 'pointer-events-none');
+      }, 1200);
+
+      try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            document.getElementById('artistEmail').textContent = user.email;
+          }
+        });
+      } catch (err) {
+        firebaseOffline = true;
+        const cachedUser = localStorage.getItem('gs_user');
+        if (cachedUser) {
+          document.getElementById('artistEmail').textContent = JSON.parse(cachedUser).email;
+        }
+      }
+
+      syncConvo();
+      syncEventsData();
+      
+      // Listen messages cross frames
+      window.addEventListener('message', (e) => {
+        if (e.data === 'sync_required') {
+          syncConvo();
+          syncEventsData();
+        }
+      });
+    });
+
+    // Logout
+    function logoutArtist() {
+      if (firebaseOffline) {
+        localStorage.removeItem('gs_user');
+        window.location.href = 'user.html';
+      } else {
+        auth.signOut().then(() => window.location.href = 'user.html');
+      }
+    }
+
+    // Media publish
+    function executeIngestPublish() {
+      const title = document.getElementById('uploadTitle').value.trim();
+      const cat = document.getElementById('uploadCategory').value;
+      const tag = document.getElementById('uploadFaceTag').value.trim();
+      const url = document.getElementById('uploadUrl').value.trim();
+
+      if (!title || !url) {
+        showToast("Form Incomplete", "Please specify title and valid image URL.", "fa-solid fa-triangle-exclamation");
+        return;
+      }
+
+      const prog = document.getElementById('progressGroup');
+      const text = document.getElementById('progressTxt');
+      const perc = document.getElementById('progressPercent');
+      const bar = document.getElementById('progressBar');
+
+      prog.classList.remove('hidden');
+      
+      // Simulate pipeline ingest
+      let duration = 0;
+      let interval = setInterval(() => {
+        duration += 10;
+        bar.style.width = `${duration}%`;
+        perc.textContent = `${duration}%`;
+
+        if (duration === 40) {
+          text.textContent = 'RUNNING COMPRESSION PIPELINES...';
+        } else if (duration === 70) {
+          text.textContent = 'TAGGING FACE METADATA IN DB...';
+        } else if (duration === 100) {
+          clearInterval(interval);
+          text.textContent = 'PUBLISH COPLEY SUCCESS!';
+          
+          // Complete save
+          const newPic = {
+            id: 'img_' + Date.now(),
+            title: title,
+            category: cat,
+            url: url,
+            photographer: 'Alexander Gold',
+            tags: tag ? tag.split(',').map(s=>s.trim()) : []
+          };
+
+          const existing = JSON.parse(localStorage.getItem('galleries') || '[]');
+          existing.push(newPic);
+          localStorage.setItem('galleries', JSON.stringify(existing));
+
+          if (!firebaseOffline && db) {
+            db.ref('galleries/' + newPic.id).set(newPic);
+          }
+
+          showToast("Photo Published", `Stored in ${cat} node database.`, "fa-solid fa-circle-check");
+          
+          // Reset Upload Form
+          setTimeout(() => {
+            prog.classList.add('hidden');
+            bar.style.width = '0%';
+            document.getElementById('uploadTitle').value = '';
+          }, 1500);
+
+          // Force synchronizations across frame boundaries
+          window.parent.postMessage('sync_required', '*');
+        }
+      }, 200);
+    }
+
+    // Watermark
+    function saveWatermark() {
+      const txt = document.getElementById('watermarkText').value;
+      showToast("Watermark Saved", `Global watermark modified: '${txt}'`, "fa-solid fa-signature");
+    }
+
+    // Access control
+    let isPermitted = true;
+    function toggleDownloadPrivilege() {
+      isPermitted = !isPermitted;
+      const btn = document.getElementById('btnToggleAccess');
+      if (isPermitted) {
+        btn.textContent = 'Download Permitted';
+        btn.className = 'px-2.5 py-1 bg-green-500/10 border border-green-500/30 text-green-400 rounded text-[9px] font-mono font-bold uppercase';
+      } else {
+        btn.textContent = 'Download Locked';
+        btn.className = 'px-2.5 py-1 bg-red-500/10 border border-red-500/30 text-red-500 rounded text-[9px] font-mono font-bold uppercase';
+      }
+      showToast("Access Updated", "Clients download lock state modified", "fa-solid fa-id-card-clip");
+    }
+
+    function triggerQRInviteBuild() {
+      const img = document.getElementById('inviteQRImg');
+      const box = document.getElementById('inviteBox');
+
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=gsphotography://gallery-invite-${Date.now()}`;
+      box.classList.remove('hidden');
+
+      showToast("Pass Built", "Personal invitation pass rendered.", "fa-solid fa-id-card");
+    }
+
+    // Sync Chat conversations
+    function syncConvo() {
+      const box = document.getElementById('convoBox');
+      const localChats = JSON.parse(localStorage.getItem('gs_chats_guest') || '[]');
+
+      if (localChats.length === 0) {
+        box.innerHTML = `<div class="text-gray-500 text-[10px] text-center">No active chats with Guest Client.</div>`;
+        return;
+      }
+
+      let html = '';
+      localChats.forEach(c => {
+        if (c.sender === 'user') {
+          html += `
+            <div>
+              <span class="text-[8px] text-gold-500 uppercase block font-mono pl-1">Client (Guest)</span>
+              <div class="px-3 py-1.5 bg-dark-900 border border-gold-400/10 rounded-xl text-[11px] text-gray-300 inline-block max-w-[85%]">${c.text}</div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="text-right">
+              <span class="text-[8px] text-gray-500 uppercase block font-mono pr-1">Me</span>
+              <div class="px-3 py-1.5 bg-gold-gradient text-dark-900 font-semibold rounded-xl text-[11px] inline-block max-w-[85%]">${c.text}</div>
+            </div>
+          `;
+        }
+      });
+      box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendConvo() {
+      const inp = document.getElementById('convoInp');
+      const text = inp.value.trim();
+      if (!text) return;
+
+      const localChats = JSON.parse(localStorage.getItem('gs_chats_guest') || '[]');
+      localChats.push({ sender: 'photographer', text: text });
+      localStorage.setItem('gs_chats_guest', JSON.stringify(localChats));
+
+      inp.value = '';
+      syncConvo();
+
+      showToast("Reply Streamed", "Your reply is now live on client's panel.", "fa-solid fa-reply");
+      window.parent.postMessage('sync_required', '*');
+    }
+
+    function syncEventsData() {
+      const defaultEvents = [
+        {
+          id: "event_1",
+          name: "Elite Royal Rajasthan Wedding",
+          date: "2026-05-15",
+          visibility: "public",
+          theme: "Wedding",
+          coverUrl: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=150&q=80"
+        },
+        {
+          id: "event_2",
+          name: "Global Tech Summit Dubai",
+          date: "2026-06-10",
+          visibility: "public",
+          theme: "Corporate",
+          coverUrl: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=150&q=80"
+        },
+        {
+          id: "event_3",
+          name: "Plaza 18th Balloon Surprise",
+          date: "2026-04-20",
+          visibility: "public",
+          theme: "Birthday",
+          coverUrl: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=150&q=80"
+        }
+      ];
+
+      if (!localStorage.getItem('events')) {
+        localStorage.setItem('events', JSON.stringify(defaultEvents));
+      }
+
+      const events = JSON.parse(localStorage.getItem('events') || '[]');
+      
+      // Update badge
+      const badgeEl = document.getElementById('artistEventCount');
+      if (badgeEl) {
+        badgeEl.textContent = `${events.length} ACTIVE`;
+      }
+
+      // Render dropdown select categories
+      const select = document.getElementById('uploadCategory');
+      if (select) {
+        let selectHTML = '';
+        events.forEach(ev => {
+          selectHTML += `<option value="${ev.theme}">${ev.name} (${ev.theme})</option>`;
+        });
+        
+        selectHTML += `
+          <option value="Wedding">Weddings (General)</option>
+          <option value="Birthday">Birthdays (General)</option>
+          <option value="Corporate">Corporate Events (General)</option>
+          <option value="Sports">Sports Events (General)</option>
+          <option value="School">School/Reunion (General)</option>
+        `;
+        select.innerHTML = selectHTML;
+      }
+
+      // Render events list
+      const listContainer = document.getElementById('artistEventsList');
+      if (listContainer) {
+        if (events.length === 0) {
+          listContainer.innerHTML = `
+            <div class="text-center py-4 text-gray-500 border border-dashed border-white/5 rounded-xl text-xs">
+              No events broadcasted on the platform yet.
+            </div>
+          `;
+          return;
+        }
+
+        let listHTML = '';
+        events.forEach(ev => {
+          const isPublic = ev.visibility === 'public';
+          const badgeText = isPublic ? '🌍 PUBLIC' : '🔒 ADMIN DRAFT';
+          const badgeClr = isPublic ? 'text-green-400 border-green-500/20' : 'text-yellow-400 border-yellow-500/20';
+
+          listHTML += `
+            <div class="p-2.5 bg-dark-955 rounded-xl border border-white/5 space-y-1 text-left text-xs relative overflow-hidden group">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h5 class="font-bold text-white group-hover:text-gold-400 duration-150 truncate leading-snug">${ev.name}</h5>
+                  <p class="text-[9px] text-[#D4AF37] font-semibold mt-0.5">${ev.theme} Shoot Category</p>
+                </div>
+                <span class="text-[8px] font-mono border px-1.5 py-0.5 rounded ${badgeClr}">${badgeText}</span>
+              </div>
+              <div class="flex justify-between items-center pt-1 border-t border-white/5 text-[9px] text-gray-500 font-mono">
+                <span>Date: ${ev.date}</span>
+                <span class="text-gold-500"><i class="fa-solid fa-camera mr-1"></i>Ingest ready</span>
+              </div>
+            </div>
+          `;
+        });
+        listContainer.innerHTML = listHTML;
+      }
+    }
+
+    function showToast(title, desc, icon = "fa-solid fa-bell") {
+      const toast = document.getElementById('toastAlert');
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastDesc').textContent = desc;
+      document.getElementById('toastIcon').className = icon;
+      
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.remove('transform', '-translate-y-4');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.classList.add('transform', '-translate-y-4');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
